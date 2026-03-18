@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feature Engineering — Herramienta Interactiva</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07080f;
+  --surface: #0e1018;
+  --surface2: #141620;
+  --surface3: #1c1f2e;
+  --border: #252838;
+  --border2: #1e2030;
+  --g1: #22d3a5;
+  --g2: #818cf8;
+  --g3: #fb923c;
+  --g4: #f472b6;
+  --g5: #38bdf8;
+  --g6: #a3e635;
+  --text: #e2e4f0;
+  --muted: #5a5d7a;
+  --muted2: #3a3d52;
+  --danger: #f87171;
+  --warn: #fbbf24;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top:0; z-index:100;
+  background: rgba(7,8,15,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 0;
+  padding: 0 28px;
+  height: 52px;
+  overflow-x: auto;
+}
+
+.topbar-brand {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 17px;
+  color: var(--g1);
+  margin-right: 28px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-btn {
+  background: none; border: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  padding: 0 14px;
+  height: 52px;
+  cursor: pointer;
+  transition: color 0.2s, border-bottom 0.2s;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--g1); border-bottom-color: var(--g1); }
+
+/* HERO */
+.hero {
+  padding: 60px 40px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--g1);
+  letter-spacing: 3px;
+  margin-bottom: 14px;
+}
+
+.hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 6vw, 68px);
+  font-weight: 900;
+  line-height: 1.0;
+  margin-bottom: 18px;
+}
+
+.hero-title em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--g2);
+}
+
+.hero-sub {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 640px;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+.hero-stats {
+  display: flex; gap: 32px; flex-wrap: wrap;
+}
+
+.stat {
+  text-align: left;
+}
+
+.stat-num {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--g1);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* MAIN */
+.main { max-width: 1200px; margin: 0 auto; padding: 0 24px 80px; }
+
+/* SECTION */
+.section {
+  display: none;
+}
+.section.visible { display: block; }
+
+/* MODULE CARD */
+.module {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.module:hover { border-color: var(--border2); }
+
+.module-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.module-header:hover .module-title { color: var(--g1); }
+
+.module-icon {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.module-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 700;
+  transition: color 0.2s;
+}
+
+.module-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 3px;
+}
+
+.module-chevron {
+  font-size: 18px;
+  color: var(--muted);
+  transition: transform 0.3s;
+}
+
+.module.open .module-chevron { transform: rotate(180deg); }
+
+.module-body {
+  display: none;
+  border-top: 1px solid var(--border);
+}
+
+.module.open .module-body { display: block; }
+
+/* TABS INSIDE MODULE */
+.module-tabs {
+  display: flex;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.mtab {
+  background: none; border: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.mtab.active { color: var(--text); border-bottom-color: var(--accent-color, var(--g1)); }
+.mtab:hover { color: var(--text); }
+
+/* TAB PANELS */
+.mpanel { display: none; padding: 24px; }
+.mpanel.active { display: grid; gap: 20px; }
+
+/* TWO-COL */
+.two-col { grid-template-columns: 1fr 1fr; }
+.three-col { grid-template-columns: 1fr 1fr 1fr; }
+.one-col { grid-template-columns: 1fr; }
+
+@media (max-width: 768px) {
+  .two-col, .three-col { grid-template-columns: 1fr; }
+}
+
+/* EXPLANATION BOX */
+.explain {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 18px;
+  border-left: 3px solid var(--accent-color, var(--g1));
+}
+
+.explain-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--accent-color, var(--g1));
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.explain p { font-size: 13px; color: #b0b2c8; line-height: 1.7; margin-bottom: 8px; }
+.explain p:last-child { margin-bottom: 0; }
+.explain strong { color: var(--text); font-weight: 500; }
+
+/* CANVAS CHART */
+.chart-wrap {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 16px;
+  position: relative;
+}
+
+.chart-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+}
+
+/* CONTROLS */
+.controls {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  margin-bottom: 12px;
+}
+
+.ctrl-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.ctrl-btn {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.ctrl-btn:hover, .ctrl-btn.active {
+  background: var(--accent-color, var(--g1));
+  color: #000;
+  border-color: var(--accent-color, var(--g1));
+}
+
+input[type=range] {
+  accent-color: var(--accent-color, var(--g1));
+  height: 4px;
+  cursor: pointer;
+}
+
+/* CODE BOX */
+.code-box {
+  background: #050508;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: #a0a8d0;
+  line-height: 1.9;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.code-box .kw { color: var(--g2); }
+.code-box .fn { color: var(--g1); }
+.code-box .st { color: var(--g3); }
+.code-box .cm { color: var(--muted); }
+.code-box .num { color: var(--g4); }
+
+/* WHEN-WHY BOX */
+.when-why {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ww-card {
+  background: var(--surface3);
+  border-radius: 8px;
+  padding: 14px;
+  border-top: 2px solid;
+}
+
+.ww-card.when { border-color: var(--g5); }
+.ww-card.why { border-color: var(--g6); }
+.ww-card.avoid { border-color: var(--danger); }
+.ww-card.example { border-color: var(--g3); }
+
+.ww-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ww-card.when .ww-title { color: var(--g5); }
+.ww-card.why .ww-title { color: var(--g6); }
+.ww-card.avoid .ww-title { color: var(--danger); }
+.ww-card.example .ww-title { color: var(--g3); }
+
+.ww-card ul { list-style: none; padding: 0; }
+.ww-card ul li {
+  font-size: 12px;
+  color: #9092a8;
+  padding: 3px 0 3px 14px;
+  position: relative;
+  line-height: 1.5;
+}
+.ww-card ul li::before { content: '—'; position: absolute; left: 0; color: var(--muted2); }
+
+/* FULLWIDTH */
+.full { grid-column: 1 / -1; }
+
+/* BADGE */
+.badge {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid currentColor;
+  letter-spacing: 0.5px;
+  margin: 2px;
+}
+
+/* TABLE */
+.nice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.nice-table th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.nice-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border2);
+  color: #9092a8;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.nice-table tr:last-child td { border-bottom: none; }
+.nice-table .hl { color: var(--text); font-weight: 500; }
+.nice-table .yes { color: var(--g1); }
+.nice-table .no { color: var(--danger); }
+.nice-table .partial { color: var(--warn); }
+
+/* INTERACTIVE DEMO */
+.demo-area {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.demo-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+/* LEAKAGE DEMO */
+.leak-timeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 16px 0;
+}
+
+.lt-block {
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  text-align: center;
+  flex: 1;
+}
+
+.lt-arrow { color: var(--muted2); font-size: 20px; flex-shrink: 0; padding: 0 4px; }
+
+/* SKEW INDICATOR */
+.skew-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.skew-fill {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent-color, var(--g1));
+  transition: width 0.5s;
+}
+
+/* SECTION HEADING */
+.sec-heading {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  margin-top: 40px;
+}
+
+.sec-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* PROGRESS BAR */
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s ease;
+}
+
+/* COMPARISON VISUAL */
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.comp-arrow {
+  font-size: 24px;
+  color: var(--accent-color, var(--g1));
+  text-align: center;
+}
+
+.comp-box {
+  background: var(--surface3);
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+}
+
+.comp-box-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* TOOLTIP */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  border-bottom: 1px dashed var(--muted2);
+}
+
+.tooltip:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* SLIDER DEMO */
+.slider-row {
+  display: flex; align-items: center; gap: 12px; margin: 8px 0;
+  font-size: 12px;
+}
+
+.slider-row label {
+  width: 120px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+}
+
+.slider-val {
+  width: 50px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--accent-color, var(--g1));
+  text-align: right;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ALERT BOX */
+.alert {
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  border-left: 3px solid;
+}
+
+.alert.danger { background: #140808; border-color: var(--danger); color: #c07070; }
+.alert.warning { background: #12100a; border-color: var(--warn); color: #b09050; }
+.alert.info { background: #080e14; border-color: var(--g5); color: #6090b0; }
+.alert strong { color: var(--text); }
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">⟁ FeatEng</div>
+  <button class="nav-btn active" onclick="showSection('overview', this)">INICIO</button>
+  <button class="nav-btn" onclick="showSection('numerical', this)">NUMÉRICAS</button>
+  <button class="nav-btn" onclick="showSection('categorical', this)">CATEGÓRICAS</button>
+  <button class="nav-btn" onclick="showSection('temporal', this)">TEMPORALES</button>
+  <button class="nav-btn" onclick="showSection('selection', this)">SELECCIÓN</button>
+  <button class="nav-btn" onclick="showSection('scaling', this)">ESCALADO</button>
+  <button class="nav-btn" onclick="showSection('leakage', this)">LEAKAGE</button>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">// HERRAMIENTA INTERACTIVA · CIENCIAS DE DATOS · ML</div>
+  <h1 class="hero-title">Feature<br><em>Engineering</em></h1>
+  <p class="hero-sub">Aprende cuándo, por qué y cómo transformar datos crudos en señales poderosas para tus modelos. Cada concepto incluye visualizaciones interactivas y ejemplos reales.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">8</div><div class="stat-label">Módulos</div></div>
+    <div class="stat"><div class="stat-num">20+</div><div class="stat-label">Técnicas</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Visualizaciones vivas</div></div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- =================== OVERVIEW =================== -->
+<div class="section visible" id="sec-overview">
+
+  <div class="sec-heading">¿Por qué Feature Engineering?</div>
+  <div class="sec-sub">// La intuición fundamental antes de ver las técnicas</div>
+
+  <!-- WHY BLOCK -->
+  <div class="module" style="--accent-color: var(--g1);" id="mod-why">
+    <div class="module-header" onclick="toggleModule('mod-why')">
+      <div class="module-icon" style="background:#0a1f18;">🎯</div>
+      <div>
+        <div class="module-title">El principio fundamental</div>
+        <div class="module-subtitle">GARBAGE IN → GARBAGE OUT · Los modelos no crean información, la amplifican</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--g1)">
+        <button class="mtab active" onclick="switchTab(this,'why-t1')">CONCEPTO</button>
+        <button class="mtab" onclick="switchTab(this,'why-t2')">DEMOSTRACIÓN</button>
+        <button class="mtab" onclick="switchTab(this,'why-t3')">EJEMPLO REAL</button>
+      </div>
+
+      <div class="mpanel active one-col" id="why-t1">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="explain" style="--accent-color:var(--g1)">
+            <div class="explain-title">¿Qué es Feature Engineering?</div>
+            <p>Es el proceso de <strong>transformar datos crudos en representaciones</strong> que los algoritmos de Machine Learning puedan entender y aprovechar mejor.</p>
+            <p>Un modelo de ML es básicamente una función matemática. Si le das señales pobres, aprenderá relaciones pobres. Si le das señales ricas, aprenderá relaciones poderosas.</p>
+            <p><strong>Ejemplo:</strong> Un árbol de decisión no puede "ver" que "enero" y "diciembre" están cerca en el tiempo. Pero si creas sin(2π·mes/12), sí puede.</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--g2)">
+            <div class="explain-title">¿Cuándo es crítico?</div>
+            <p>Siempre, pero especialmente cuando:</p>
+            <p>• Los datos tienen <strong>distribuciones sesgadas</strong> (precios, salarios, clics)</p>
+            <p>• Hay <strong>variables categóricas</strong> que el modelo no puede leer directamente</p>
+            <p>• Tienes <strong>fechas o texto</strong> sin procesar</p>
+            <p>• El modelo tiene <strong>bajo rendimiento</strong> pese a muchos datos</p>
+            <p>• Hay <strong>relaciones no lineales</strong> entre variables</p>
+          </div>
+        </div>
+        <div style="background:var(--surface2); border-radius:10px; padding:18px;">
+          <div class="demo-title">IMPACTO TÍPICO EN MÉTRICAS</div>
+          <div id="impact-bars"></div>
+          <div style="font-size:11px; color:var(--muted); margin-top:12px; font-family:'IBM Plex Mono',monospace;">*Datos ilustrativos basados en casos reales reportados en competencias Kaggle y papers académicos.</div>
+        </div>
+      </div>
+
+      <div class="mpanel one-col" id="why-t2">
+        <div class="demo-area">
+          <div class="demo-title">DEMO: PREDECIR PRECIO DE CASA — FEATURES CRUDAS vs ENGINEERED</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <div class="comp-box-title" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px;">DATOS CRUDOS</div>
+              <canvas id="raw-scatter" height="200"></canvas>
+              <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:'IBM Plex Mono',monospace;">R² ≈ 0.41 — Relación lineal débil</div>
+            </div>
+            <div>
+              <div class="comp-box-title" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--g1);letter-spacing:2px;margin-bottom:10px;">CON LOG TRANSFORM</div>
+              <canvas id="log-scatter" height="200"></canvas>
+              <div style="font-size:11px;color:var(--g1);margin-top:8px;font-family:'IBM Plex Mono',monospace;">R² ≈ 0.78 — Relación lineal fuerte ✓</div>
+            </div>
+          </div>
+          <div class="alert info">
+            <strong>¿Qué pasó?</strong> Los precios de casas siguen una distribución log-normal. Al aplicar log(), la relación con el área se vuelve lineal y la regresión lineal la puede capturar perfectamente.
+          </div>
+        </div>
+      </div>
+
+      <div class="mpanel one-col" id="why-t3">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+          <div class="ww-card example">
+            <div class="ww-title">🏥 Medicina</div>
+            <ul><li>IMC = peso/altura²</li><li>Cambio de presión sanguínea</li><li>Días desde último evento</li><li>Ratio LDL/HDL</li></ul>
+          </div>
+          <div class="ww-card example" style="border-color:var(--g2)">
+            <div class="ww-title" style="color:var(--g2)">💳 Finanzas</div>
+            <ul><li>Ratio deuda/ingreso</li><li>Volatilidad 30 días</li><li>Días sin transacciones</li><li>Cambio % mes anterior</li></ul>
+          </div>
+          <div class="ww-card example" style="border-color:var(--g5)">
+            <div class="ww-title" style="color:var(--g5)">🛒 E-commerce</div>
+            <ul><li>Tasa de conversión histórica</li><li>Días desde última compra</li><li>Categorías únicas compradas</li><li>Ticket promedio por sesión</li></ul>
+          </div>
+        </div>
+        <div class="alert warning">
+          <strong>Regla de oro:</strong> El conocimiento del dominio es tu arma más poderosa. Un experto en medicina sabe que el ratio LDL/HDL es más predictivo que cada valor por separado. Esto ningún algoritmo automático lo puede descubrir sin guía.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- =================== NUMÉRICAS =================== -->
+<div class="section" id="sec-numerical">
+  <div class="sec-heading">Variables Numéricas</div>
+  <div class="sec-sub">// Transformar distribuciones para que los modelos trabajen mejor</div>
+
+  <!-- LOG / BOX-COX -->
+  <div class="module" style="--accent-color:var(--g5);" id="mod-log">
+    <div class="module-header" onclick="toggleModule('mod-log')">
+      <div class="module-icon" style="background:#060f18;">📊</div>
+      <div>
+        <div class="module-title">Transformaciones de Distribución</div>
+        <div class="module-subtitle">LOG · SQRT · BOX-COX · YEO-JOHNSON</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--g5)">
+        <button class="mtab active" onclick="switchTab(this,'log-t1')">¿CUÁNDO Y POR QUÉ?</button>
+        <button class="mtab" onclick="switchTab(this,'log-t2')">VISUALIZACIÓN</button>
+        <button class="mtab" onclick="switchTab(this,'log-t3')">CÓDIGO</button>
+      </div>
+      <div class="mpanel active one-col" id="log-t1">
+        <div class="when-why">
+          <div class="ww-card when">
+            <div class="ww-title">⏰ CUÁNDO USAR</div>
+            <ul>
+              <li>Variable tiene sesgo positivo fuerte (skewness > 1)</li>
+              <li>Datos de precios, salarios, ingresos, poblaciones</li>
+              <li>Conteos de eventos (clicks, compras)</li>
+              <li>El modelo usa distancias o gradientes (regresión, SVM, redes neuronales)</li>
+              <li>Residuos del modelo muestran heterocedasticidad</li>
+            </ul>
+          </div>
+          <div class="ww-card why">
+            <div class="ww-title">💡 POR QUÉ FUNCIONA</div>
+            <ul>
+              <li>Comprime la cola larga → reduce influencia de outliers</li>
+              <li>Linealiza relaciones multiplicativas → regresión lineal las captura</li>
+              <li>Estabiliza varianza → mejora convergencia en redes neuronales</li>
+              <li>Hace la distribución más "normal" → mejora modelos que asumen normalidad</li>
+            </ul>
+          </div>
+          <div class="ww-card avoid">
+            <div class="ww-title">🚫 EVITAR CUANDO</div>
+            <ul>
+              <li>Valores negativos o cero (usar log1p o Yeo-Johnson)</li>
+              <li>Distribución ya es simétrica/normal</li>
+              <li>Modelos basados en árboles (no lo necesitan)</li>
+              <li>La escala original tiene significado semántico importante</li>
+            </ul>
+          </div>
+          <div class="ww-card example">
+            <div class="ww-title">🔬 EJEMPLO REAL</div>
+            <ul>
+              <li>Precio de viviendas (Kaggle: House Prices)</li>
+              <li>Ingresos en modelos crediticios</li>
+              <li>Conteo de transacciones bancarias</li>
+              <li>Tiempo hasta evento en survival analysis</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="log-t2">
+        <div class="demo-area">
+          <div class="demo-title">VISUALIZACIÓN INTERACTIVA — EFECTO DE LA TRANSFORMACIÓN</div>
+          <div class="controls">
+            <span class="ctrl-label">DISTRIBUCIÓN:</span>
+            <button class="ctrl-btn active" onclick="setDist('exponential',this)">Exponencial</button>
+            <button class="ctrl-btn" onclick="setDist('lognormal',this)">Log-Normal</button>
+            <button class="ctrl-btn" onclick="setDist('pareto',this)">Pareto</button>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="chart-wrap">
+              <div class="chart-label">ANTES: distribución original</div>
+              <canvas id="dist-before" height="180"></canvas>
+              <div id="skew-before" class="skew-bar" style="margin-top:10px;"></div>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-label">DESPUÉS: log1p(x)</div>
+              <canvas id="dist-after" height="180"></canvas>
+              <div id="skew-after" class="skew-bar" style="margin-top:10px;"></div>
+            </div>
+          </div>
+          <div id="dist-insight" class="alert info" style="margin-top:14px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="log-t3">
+        <div class="code-box"><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> PowerTransformer
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># ── Opción 1: Log natural (datos > 0)</span>
+df[<span class="st">'precio_log'</span>] = np.<span class="fn">log</span>(df[<span class="st">'precio'</span>])
+
+<span class="cm"># ── Opción 2: Log1p (acepta ceros)</span>
+df[<span class="st">'precio_log1p'</span>] = np.<span class="fn">log1p</span>(df[<span class="st">'precio'</span>])
+
+<span class="cm"># ── Opción 3: Box-Cox (solo positivos, optimiza lambda)</span>
+pt = PowerTransformer(method=<span class="st">'box-cox'</span>)
+df[<span class="st">'precio_boxcox'</span>] = pt.<span class="fn">fit_transform</span>(df[[<span class="st">'precio'</span>]])
+
+<span class="cm"># ── Opción 4: Yeo-Johnson (acepta negativos)</span>
+pt2 = PowerTransformer(method=<span class="st">'yeo-johnson'</span>)
+df[<span class="st">'precio_yj'</span>] = pt2.<span class="fn">fit_transform</span>(df[[<span class="st">'precio'</span>]])
+
+<span class="cm"># ── Verificar skewness antes y después</span>
+<span class="kw">print</span>(f<span class="st">"Skewness antes: {df['precio'].skew():.2f}"</span>)
+<span class="kw">print</span>(f<span class="st">"Skewness después: {df['precio_log1p'].skew():.2f}"</span>)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BINNING -->
+  <div class="module" style="--accent-color:var(--g3);" id="mod-bin">
+    <div class="module-header" onclick="toggleModule('mod-bin')">
+      <div class="module-icon" style="background:#180e06;">📦</div>
+      <div>
+        <div class="module-title">Binning / Discretización</div>
+        <div class="module-subtitle">EQUAL-WIDTH · EQUAL-FREQUENCY · CUSTOM · DECISION TREE BINNING</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--g3)">
+        <button class="mtab active" onclick="switchTab(this,'bin-t1')">¿CUÁNDO Y POR QUÉ?</button>
+        <button class="mtab" onclick="switchTab(this,'bin-t2')">VISUALIZACIÓN</button>
+        <button class="mtab" onclick="switchTab(this,'bin-t3')">CÓDIGO</button>
+      </div>
+      <div class="mpanel active one-col" id="bin-t1">
+        <div class="when-why">
+          <div class="ww-card when">
+            <div class="ww-title">⏰ CUÁNDO USAR</div>
+            <ul>
+              <li>Variable continua con relación no-lineal al target</li>
+              <li>Quieres capturar efectos de umbral (ej: menores de 18 años)</li>
+              <li>Datos con outliers extremos que distorsionan</li>
+              <li>Necesitas interpretabilidad del modelo</li>
+              <li>Preparar datos para modelos lineales con no-linealidades</li>
+            </ul>
+          </div>
+          <div class="ww-card why">
+            <div class="ww-title">💡 POR QUÉ FUNCIONA</div>
+            <ul>
+              <li>Captura relaciones no-lineales sin transformaciones complejas</li>
+              <li>Robustez a outliers — extremos van a un mismo bin</li>
+              <li>Permite que el modelo trate rangos de forma diferente</li>
+              <li>Reduce sobreajuste al suavizar variaciones locales</li>
+            </ul>
+          </div>
+          <div class="ww-card avoid">
+            <div class="ww-title">🚫 EVITAR CUANDO</div>
+            <ul>
+              <li>Relación con target es genuinamente lineal</li>
+              <li>Pierdes demasiada información con pocos bins</li>
+              <li>Usas modelos tipo gradient boosting (ya capturan no-linealidades)</li>
+            </ul>
+          </div>
+          <div class="ww-card example">
+            <div class="ww-title">🔬 EJEMPLO REAL</div>
+            <ul>
+              <li>Edad → [0-18], [19-35], [36-60], [60+]</li>
+              <li>Ingresos → quintiles de riqueza</li>
+              <li>Horas de uso → mañana/tarde/noche</li>
+              <li>Score crediticio → bandas de riesgo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="bin-t2">
+        <div class="demo-area">
+          <div class="demo-title">DEMO INTERACTIVO — EFECTO DEL NÚMERO DE BINS</div>
+          <div class="slider-row">
+            <label>N° DE BINS</label>
+            <input type="range" min="2" max="20" value="5" id="bin-slider" oninput="updateBinDemo()" style="flex:1">
+            <span class="slider-val" id="bin-val">5</span>
+          </div>
+          <div class="controls">
+            <span class="ctrl-label">TIPO:</span>
+            <button class="ctrl-btn active" onclick="setBinType('width',this)">Equal-Width</button>
+            <button class="ctrl-btn" onclick="setBinType('freq',this)">Equal-Frequency</button>
+          </div>
+          <canvas id="bin-canvas" height="200"></canvas>
+          <div id="bin-insight" class="alert info" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="bin-t3">
+        <div class="code-box"><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># ── Equal-Width: cada bin tiene el mismo rango</span>
+df[<span class="st">'edad_bin_ew'</span>] = pd.<span class="fn">cut</span>(df[<span class="st">'edad'</span>], bins=<span class="num">5</span>)
+
+<span class="cm"># ── Equal-Frequency: cada bin tiene los mismos datos</span>
+df[<span class="st">'edad_bin_ef'</span>] = pd.<span class="fn">qcut</span>(df[<span class="st">'edad'</span>], q=<span class="num">5</span>)
+
+<span class="cm"># ── Custom bins con etiquetas (dominio experto)</span>
+bins = [<span class="num">0</span>, <span class="num">18</span>, <span class="num">25</span>, <span class="num">35</span>, <span class="num">50</span>, <span class="num">65</span>, <span class="num">120</span>]
+labels = [<span class="st">'menor'</span>,<span class="st">'joven'</span>,<span class="st">'adulto_joven'</span>,<span class="st">'adulto'</span>,<span class="st">'senior'</span>,<span class="st">'mayor'</span>]
+df[<span class="st">'edad_grupo'</span>] = pd.<span class="fn">cut</span>(df[<span class="st">'edad'</span>], bins=bins, labels=labels)
+
+<span class="cm"># ── Decision Tree Binning (óptimo para el target)</span>
+<span class="kw">from</span> sklearn.tree <span class="kw">import</span> DecisionTreeClassifier
+tree = DecisionTreeClassifier(max_leaf_nodes=<span class="num">6</span>)
+tree.<span class="fn">fit</span>(df[[<span class="st">'edad'</span>]], df[<span class="st">'target'</span>])
+df[<span class="st">'edad_dt_bin'</span>] = tree.<span class="fn">apply</span>(df[[<span class="st">'edad'</span>]])</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POLYNOMIAL -->
+  <div class="module" style="--accent-color:var(--g4);" id="mod-poly">
+    <div class="module-header" onclick="toggleModule('mod-poly')">
+      <div class="module-icon" style="background:#160814;">🔢</div>
+      <div>
+        <div class="module-title">Features Polinomiales e Interacciones</div>
+        <div class="module-subtitle">x² · x³ · x·y · RATIO · DIFERENCIA</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--g4)">
+        <button class="mtab active" onclick="switchTab(this,'poly-t1')">¿CUÁNDO Y POR QUÉ?</button>
+        <button class="mtab" onclick="switchTab(this,'poly-t2')">VISUALIZACIÓN</button>
+        <button class="mtab" onclick="switchTab(this,'poly-t3')">CÓDIGO</button>
+      </div>
+      <div class="mpanel active one-col" id="poly-t1">
+        <div class="when-why">
+          <div class="ww-card when">
+            <div class="ww-title">⏰ CUÁNDO USAR</div>
+            <ul>
+              <li>Relación curvilínea entre feature y target (parábola, cúbica)</li>
+              <li>Modelos lineales que no capturan no-linealidades</li>
+              <li>Sabes que dos variables interactúan (el efecto de A depende de B)</li>
+              <li>Ratios tienen significado físico/económico (velocidad, densidad, rentabilidad)</li>
+            </ul>
+          </div>
+          <div class="ww-card why">
+            <div class="ww-title">💡 POR QUÉ FUNCIONA</div>
+            <ul>
+              <li>Extiende el espacio de features permitiendo curvas</li>
+              <li>Captura sinergias entre variables que por separado no predicen</li>
+              <li>Los ratios normalizan por escala (precio/m² vs precio absoluto)</li>
+            </ul>
+          </div>
+          <div class="ww-card avoid">
+            <div class="ww-title">🚫 EVITAR CUANDO</div>
+            <ul>
+              <li>Grado > 3: explosión combinatoria de features</li>
+              <li>Datos insuficientes: alta varianza, overfitting</li>
+              <li>Usar con regularización si grado alto</li>
+            </ul>
+          </div>
+          <div class="ww-card example">
+            <div class="ww-title">🔬 EJEMPLO REAL</div>
+            <ul>
+              <li>área² para predecir precio (rendimientos decrecientes)</li>
+              <li>ingreso × edad (poder adquisitivo acumulado)</li>
+              <li>deuda/ingreso (ratio crediticio)</li>
+              <li>velocidad² en modelos de física</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="poly-t2">
+        <div class="demo-area">
+          <div class="demo-title">DEMO: REGRESIÓN LINEAL VS POLINOMIAL</div>
+          <div class="controls">
+            <span class="ctrl-label">GRADO:</span>
+            <button class="ctrl-btn active" onclick="setPolyDeg(1,this)">Lineal</button>
+            <button class="ctrl-btn" onclick="setPolyDeg(2,this)">Grado 2</button>
+            <button class="ctrl-btn" onclick="setPolyDeg(3,this)">Grado 3</button>
+          </div>
+          <canvas id="poly-canvas" height="220"></canvas>
+          <div id="poly-r2" style="font-size:12px; color:var(--g4); font-family:'IBM Plex Mono',monospace; margin-top:8px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="poly-t3">
+        <div class="code-box"><span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> PolynomialFeatures
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># ── Features polinomiales automáticas (grado 2)</span>
+poly = PolynomialFeatures(degree=<span class="num">2</span>, include_bias=<span class="kw">False</span>)
+X_poly = poly.<span class="fn">fit_transform</span>(df[[<span class="st">'area'</span>, <span class="st">'habitaciones'</span>]])
+<span class="cm"># Genera: area, habitaciones, area², area·hab, habitaciones²</span>
+
+<span class="cm"># ── Ratios manuales (mejor cuando tienes dominio)</span>
+df[<span class="st">'precio_por_m2'</span>] = df[<span class="st">'precio'</span>] / df[<span class="st">'area'</span>]
+df[<span class="st">'ratio_deuda_ingreso'</span>] = df[<span class="st">'deuda'</span>] / df[<span class="st">'ingreso'</span>]
+df[<span class="st">'diff_temp'</span>] = df[<span class="st">'temp_max'</span>] - df[<span class="st">'temp_min'</span>]
+
+<span class="cm"># ── Interacciones específicas de dominio</span>
+df[<span class="st">'ingreso_por_edad'</span>] = df[<span class="st">'ingreso'</span>] * df[<span class="st">'edad'</span>]</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end numerical -->
+
+<!-- =================== CATEGÓRICAS =================== -->
+<div class="section" id="sec-categorical">
+  <div class="sec-heading">Variables Categóricas</div>
+  <div class="sec-sub">// Convertir texto y categorías en números que los modelos entiendan</div>
+
+  <div class="module" style="--accent-color:var(--g2);" id="mod-enc">
+    <div class="module-header" onclick="toggleModule('mod-enc')">
+      <div class="module-icon" style="background:#0e0820;">🏷️</div>
+      <div>
+        <div class="module-title">Encodings Categóricos</div>
+        <div class="module-subtitle">OHE · LABEL · TARGET · FREQUENCY · BINARY</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--g2)">
+        <button class="mtab active" onclick="switchTab(this,'enc-t1')">COMPARATIVA</button>
+        <button class="mtab" onclick="switchTab(this,'enc-t2')">CUÁNDO USAR CADA UNO</button>
+        <button class="mtab" onclick="switchTab(this,'enc-t3')">VISUALIZACIÓN</button>
+        <button class="mtab" onclick="switchTab(this,'enc-t4')">CÓDIGO</button>
+      </div>
+      <div class="mpanel active one-col" id="enc-t1">
+        <table class="nice-table">
+          <tr>
+            <th>MÉTODO</th>
+            <th>CARDINALIDAD</th>
+            <th>MODELO RECOMENDADO</th>
+            <th>RIESGO LEAKAGE</th>
+            <th>PRESERVA ORDEN</th>
+            <th>NOTAS CLAVE</th>
+          </tr>
+          <tr><td class="hl">One-Hot (OHE)</td><td>Baja (&lt;15)</td><td>Regresión, SVM, NN</td><td class="yes">Bajo</td><td class="no">No</td><td>Crea columna por categoría. Curse of dimensionality si alta card.</td></tr>
+          <tr><td class="hl">Label Encoding</td><td>Cualquiera</td><td>Árboles, XGBoost</td><td class="yes">Bajo</td><td class="partial">Si hay orden</td><td>Introduce orden artificial en nominales. Solo usar en ordinales o tree-based.</td></tr>
+          <tr><td class="hl">Target Encoding</td><td>Alta (&gt;15)</td><td>Lineal, NN, Boosting</td><td class="no">Alto</td><td class="no">No</td><td>Muy poderoso pero requiere cross-validation para evitar leakage.</td></tr>
+          <tr><td class="hl">Frequency Enc.</td><td>Alta</td><td>Cualquiera</td><td class="yes">Bajo</td><td class="no">No</td><td>Simple y robusto. Pierde distinción entre categorías con igual frecuencia.</td></tr>
+          <tr><td class="hl">Binary Enc.</td><td>Media-Alta</td><td>Cualquiera</td><td class="yes">Bajo</td><td class="no">No</td><td>Compromiso entre OHE y Label. log₂(n) columnas en vez de n.</td></tr>
+          <tr><td class="hl">Embeddings</td><td>Muy Alta</td><td>Redes Neuronales</td><td class="yes">Bajo</td><td class="no">No</td><td>Aprende representación semántica. Requiere suficientes datos.</td></tr>
+        </table>
+      </div>
+      <div class="mpanel one-col" id="enc-t2">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="explain" style="--accent-color:var(--g2)">
+            <div class="explain-title">ONE-HOT ENCODING</div>
+            <p><strong>Usar cuando:</strong> Categorías nominales sin orden, baja cardinalidad (&lt;15 categorías), modelos sensibles a escala (Regresión, SVM, KNN, NN).</p>
+            <p><strong>Por qué:</strong> No introduce ninguna relación de orden falsa entre categorías. "Rojo" no es mayor ni menor que "Azul".</p>
+            <p><strong>Cuidado:</strong> Con 100+ categorías crea 100+ columnas → memoria y tiempo de entrenamiento explotan.</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--g3)">
+            <div class="explain-title">TARGET ENCODING</div>
+            <p><strong>Usar cuando:</strong> Alta cardinalidad (ciudades, IDs, SKUs), el dataset es grande, modelos de boosting o regresión.</p>
+            <p><strong>Por qué:</strong> Reemplaza cada categoría con la media del target → captura información predictiva directa.</p>
+            <p><strong>⚠ CRÍTICO:</strong> Siempre usar con cross-validation o smoothing para evitar data leakage hacia el target.</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--g1)">
+            <div class="explain-title">LABEL ENCODING</div>
+            <p><strong>Usar cuando:</strong> Variables ordinales con orden natural (Bajo/Medio/Alto, Malo/Regular/Bueno), o con modelos basados en árboles.</p>
+            <p><strong>Por qué:</strong> Los árboles de decisión pueden aprender el orden real aunque sea arbitrario, sin importar el número asignado.</p>
+            <p><strong>Cuidado:</strong> NUNCA usar en nominales con modelos lineales (introduce orden falso).</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--g5)">
+            <div class="explain-title">FREQUENCY ENCODING</div>
+            <p><strong>Usar cuando:</strong> Alta cardinalidad, no tienes target disponible (unsupervised), quieres simplicidad y robustez.</p>
+            <p><strong>Por qué:</strong> La frecuencia de una categoría suele correlacionar con el target en muchos problemas reales.</p>
+            <p><strong>Limitación:</strong> Dos categorías con la misma frecuencia se vuelven indistinguibles.</p>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="enc-t3">
+        <div class="demo-area">
+          <div class="demo-title">VISUALIZACIÓN — ENCODING DE "CIUDAD" CON 5 CATEGORÍAS</div>
+          <canvas id="enc-canvas" height="260"></canvas>
+          <div class="controls" style="margin-top:14px;">
+            <span class="ctrl-label">MOSTRAR:</span>
+            <button class="ctrl-btn active" onclick="setEncView('ohe',this)">One-Hot</button>
+            <button class="ctrl-btn" onclick="setEncView('label',this)">Label</button>
+            <button class="ctrl-btn" onclick="setEncView('target',this)">Target</button>
+            <button class="ctrl-btn" onclick="setEncView('freq',this)">Frequency</button>
+          </div>
+          <div id="enc-insight" class="alert info" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="enc-t4">
+        <div class="code-box"><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> LabelEncoder
+<span class="kw">from</span> category_encoders <span class="kw">import</span> TargetEncoder, BinaryEncoder
+
+<span class="cm"># ── One-Hot Encoding</span>
+df = pd.<span class="fn">get_dummies</span>(df, columns=[<span class="st">'ciudad'</span>], drop_first=<span class="kw">True</span>)
+
+<span class="cm"># ── Label Encoding (solo para ordinales o tree-based)</span>
+le = LabelEncoder()
+df[<span class="st">'nivel_enc'</span>] = le.<span class="fn">fit_transform</span>(df[<span class="st">'nivel'</span>])
+
+<span class="cm"># ── Target Encoding CON cross-validation para evitar leakage</span>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> KFold
+te = TargetEncoder(smoothing=<span class="num">10</span>)
+df[<span class="st">'ciudad_target'</span>] = te.<span class="fn">fit_transform</span>(df[<span class="st">'ciudad'</span>], df[<span class="st">'target'</span>])
+
+<span class="cm"># ── Frequency Encoding</span>
+freq = df[<span class="st">'ciudad'</span>].<span class="fn">value_counts</span>() / len(df)
+df[<span class="st">'ciudad_freq'</span>] = df[<span class="st">'ciudad'</span>].<span class="fn">map</span>(freq)
+
+<span class="cm"># ── Binary Encoding (alta cardinalidad)</span>
+be = BinaryEncoder(cols=[<span class="st">'ciudad'</span>])
+df = be.<span class="fn">fit_transform</span>(df)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== TEMPORALES =================== -->
+<div class="section" id="sec-temporal">
+  <div class="sec-heading">Variables Temporales</div>
+  <div class="sec-sub">// Extraer señales de fechas, horas y series de tiempo</div>
+
+  <div class="module" style="--accent-color:var(--g3);" id="mod-time">
+    <div class="module-header" onclick="toggleModule('mod-time')">
+      <div class="module-icon" style="background:#180e06;">⏰</div>
+      <div>
+        <div class="module-title">Ingeniería de Features Temporales</div>
+        <div class="module-subtitle">EXTRACCIÓN · CICLICIDAD · LAGS · ROLLING STATS</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--g3)">
+        <button class="mtab active" onclick="switchTab(this,'time-t1')">¿CUÁNDO Y POR QUÉ?</button>
+        <button class="mtab" onclick="switchTab(this,'time-t2')">CICLICIDAD VISUAL</button>
+        <button class="mtab" onclick="switchTab(this,'time-t3')">LAGS Y ROLLING</button>
+        <button class="mtab" onclick="switchTab(this,'time-t4')">CÓDIGO</button>
+      </div>
+      <div class="mpanel active one-col" id="time-t1">
+        <div class="when-why">
+          <div class="ww-card when">
+            <div class="ww-title">⏰ CUÁNDO USAR</div>
+            <ul>
+              <li>Tienes columnas de fecha/hora en el dataset</li>
+              <li>El comportamiento varía por hora, día, mes o temporada</li>
+              <li>Predices demanda, ventas, tráfico, fraude</li>
+              <li>Hay patrones estacionales o de tendencia</li>
+              <li>El tiempo transcurrido desde un evento importa</li>
+            </ul>
+          </div>
+          <div class="ww-card why">
+            <div class="ww-title">💡 POR QUÉ FUNCIONA</div>
+            <ul>
+              <li>Los modelos no interpretan fechas directamente</li>
+              <li>Extraer componentes revela estacionalidad oculta</li>
+              <li>Los lags capturan inercia y autocorrelación</li>
+              <li>Rolling stats suavizan ruido y capturan tendencia local</li>
+              <li>Sin/cos evitan discontinuidad en variables cíclicas</li>
+            </ul>
+          </div>
+          <div class="ww-card avoid">
+            <div class="ww-title">🚫 EVITAR CUANDO</div>
+            <ul>
+              <li>Usar timestamp bruto como feature numérico</li>
+              <li>Lags sin verificar que no hay leakage temporal</li>
+              <li>Rolling sobre ventanas que incluyen datos futuros</li>
+              <li>Asumir que el patrón temporal se mantiene en producción</li>
+            </ul>
+          </div>
+          <div class="ww-card example">
+            <div class="ww-title">🔬 EJEMPLO REAL</div>
+            <ul>
+              <li>Ventas retail: día_semana, es_fin_semana, semana_año</li>
+              <li>Fraude bancario: hora_del_día, días_desde_última_transacción</li>
+              <li>Energía eléctrica: temperatura_lag1, consumo_rolling7</li>
+              <li>Click-through rate: hora, día_semana, días_hasta_evento</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="time-t2">
+        <div class="demo-area">
+          <div class="demo-title">PROBLEMA DE CICLICIDAD — ¿POR QUÉ SIN/COS?</div>
+          <div class="alert warning" style="margin-bottom:14px;">
+            <strong>El problema:</strong> Diciembre (12) y Enero (1) están cerca en el tiempo, pero el modelo ve una diferencia de 11. Enero (1) y Febrero (2) parecen igual de cercanos que Diciembre y Noviembre.
+          </div>
+          <canvas id="cyclic-canvas" height="200"></canvas>
+          <div class="controls" style="margin-top:12px;">
+            <span class="ctrl-label">VER:</span>
+            <button class="ctrl-btn active" onclick="setCyclicView('raw',this)">Mes crudo (1-12)</button>
+            <button class="ctrl-btn" onclick="setCyclicView('sincos',this)">sin/cos encoding</button>
+          </div>
+          <div id="cyclic-insight" class="alert info" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="time-t3">
+        <div class="demo-area">
+          <div class="demo-title">LAGS Y ROLLING STATISTICS</div>
+          <div class="controls">
+            <span class="ctrl-label">MOSTRAR:</span>
+            <button class="ctrl-btn active" onclick="setLagView('raw',this)">Serie original</button>
+            <button class="ctrl-btn" onclick="setLagView('lag',this)">Lag-7</button>
+            <button class="ctrl-btn" onclick="setLagView('rolling',this)">Rolling mean 7d</button>
+            <button class="ctrl-btn" onclick="setLagView('all',this)">Todos</button>
+          </div>
+          <canvas id="lag-canvas" height="220"></canvas>
+          <div id="lag-insight" class="alert info" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="time-t4">
+        <div class="code-box"><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># ── Extraer componentes básicos</span>
+df[<span class="st">'año'</span>] = df[<span class="st">'fecha'</span>].dt.year
+df[<span class="st">'mes'</span>] = df[<span class="st">'fecha'</span>].dt.month
+df[<span class="st">'dia'</span>] = df[<span class="st">'fecha'</span>].dt.day
+df[<span class="st">'hora'</span>] = df[<span class="st">'fecha'</span>].dt.hour
+df[<span class="st">'dia_semana'</span>] = df[<span class="st">'fecha'</span>].dt.dayofweek
+df[<span class="st">'es_fin_semana'</span>] = (df[<span class="st">'dia_semana'</span>] >= <span class="num">5</span>).astype(int)
+df[<span class="st">'semana_año'</span>] = df[<span class="st">'fecha'</span>].dt.isocalendar().week
+
+<span class="cm"># ── Encoding cíclico (SIEMPRE para variables periódicas)</span>
+df[<span class="st">'mes_sin'</span>] = np.<span class="fn">sin</span>(<span class="num">2</span> * np.pi * df[<span class="st">'mes'</span>] / <span class="num">12</span>)
+df[<span class="st">'mes_cos'</span>] = np.<span class="fn">cos</span>(<span class="num">2</span> * np.pi * df[<span class="st">'mes'</span>] / <span class="num">12</span>)
+df[<span class="st">'hora_sin'</span>] = np.<span class="fn">sin</span>(<span class="num">2</span> * np.pi * df[<span class="st">'hora'</span>] / <span class="num">24</span>)
+df[<span class="st">'hora_cos'</span>] = np.<span class="fn">cos</span>(<span class="num">2</span> * np.pi * df[<span class="st">'hora'</span>] / <span class="num">24</span>)
+
+<span class="cm"># ── Lags (cuidado: ordenar por tiempo primero)</span>
+df = df.<span class="fn">sort_values</span>(<span class="st">'fecha'</span>)
+df[<span class="st">'ventas_lag1'</span>] = df[<span class="st">'ventas'</span>].<span class="fn">shift</span>(<span class="num">1</span>)
+df[<span class="st">'ventas_lag7'</span>] = df[<span class="st">'ventas'</span>].<span class="fn">shift</span>(<span class="num">7</span>)
+
+<span class="cm"># ── Rolling statistics</span>
+df[<span class="st">'ventas_mean7'</span>] = df[<span class="st">'ventas'</span>].<span class="fn">rolling</span>(<span class="num">7</span>).<span class="fn">mean</span>()
+df[<span class="st">'ventas_std7'</span>] = df[<span class="st">'ventas'</span>].<span class="fn">rolling</span>(<span class="num">7</span>).<span class="fn">std</span>()
+
+<span class="cm"># ── Tiempo desde evento</span>
+df[<span class="st">'dias_desde_registro'</span>] = (df[<span class="st">'fecha'</span>] - df[<span class="st">'fecha_registro'</span>]).dt.days</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SELECCIÓN =================== -->
+<div class="section" id="sec-selection">
+  <div class="sec-heading">Selección de Features</div>
+  <div class="sec-sub">// Más features no siempre es mejor — eliminar ruido mejora el modelo</div>
+
+  <div class="module" style="--accent-color:var(--g1);" id="mod-sel">
+    <div class="module-header" onclick="toggleModule('mod-sel')">
+      <div class="module-icon" style="background:#0a1f18;">✦</div>
+      <div>
+        <div class="module-title">Métodos de Selección de Features</div>
+        <div class="module-subtitle">FILTER · WRAPPER · EMBEDDED · IMPORTANCIA</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--g1)">
+        <button class="mtab active" onclick="switchTab(this,'sel-t1')">¿CUÁNDO Y POR QUÉ?</button>
+        <button class="mtab" onclick="switchTab(this,'sel-t2')">IMPORTANCIA VISUAL</button>
+        <button class="mtab" onclick="switchTab(this,'sel-t3')">CÓDIGO</button>
+      </div>
+      <div class="mpanel active one-col" id="sel-t1">
+        <div class="alert warning" style="margin-bottom:16px;">
+          <strong>La maldición de la dimensionalidad:</strong> Agregar features irrelevantes añade ruido, aumenta el tiempo de entrenamiento y puede hacer que el modelo "memorice" el ruido en lugar de aprender patrones reales.
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+          <div class="explain" style="--accent-color:var(--g1)">
+            <div class="explain-title">FILTER METHODS</div>
+            <p><strong>Cuándo:</strong> Primera exploración rápida, datasets grandes, antes de entrenar.</p>
+            <p><strong>Métodos:</strong> Correlación, Chi², Mutual Information, Varianza.</p>
+            <p><strong>Ventaja:</strong> Rápido, independiente del modelo.</p>
+            <p><strong>Limitación:</strong> No considera interacciones entre features.</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--g4)">
+            <div class="explain-title">WRAPPER METHODS</div>
+            <p><strong>Cuándo:</strong> Dataset pequeño-mediano, quieres el subconjunto óptimo para un modelo específico.</p>
+            <p><strong>Métodos:</strong> RFE, Forward/Backward Selection.</p>
+            <p><strong>Ventaja:</strong> Considera el modelo completo.</p>
+            <p><strong>Limitación:</strong> Muy costoso computacionalmente.</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--g2)">
+            <div class="explain-title">EMBEDDED METHODS</div>
+            <p><strong>Cuándo:</strong> Siempre que uses Lasso, Ridge, XGBoost o Random Forest.</p>
+            <p><strong>Métodos:</strong> Lasso (L1), Feature Importance, SelectFromModel.</p>
+            <p><strong>Ventaja:</strong> La selección ocurre durante el entrenamiento.</p>
+            <p><strong>Limitación:</strong> Específico al modelo usado.</p>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="sel-t2">
+        <div class="demo-area">
+          <div class="demo-title">DEMO: IMPORTANCIA DE FEATURES (RANDOM FOREST SIMULADO)</div>
+          <button class="ctrl-btn" onclick="regenerateImportance()" style="margin-bottom:14px;">↻ REGENERAR DATASET</button>
+          <canvas id="importance-canvas" height="260"></canvas>
+          <div id="importance-insight" class="alert info" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="sel-t3">
+        <div class="code-box"><span class="kw">from</span> sklearn.feature_selection <span class="kw">import</span> (
+    SelectKBest, f_classif, mutual_info_classif,
+    RFE, SelectFromModel, VarianceThreshold
+)
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> Lasso
+
+<span class="cm"># ── Filter: Mutual Information</span>
+selector = SelectKBest(mutual_info_classif, k=<span class="num">10</span>)
+X_new = selector.<span class="fn">fit_transform</span>(X_train, y_train)
+
+<span class="cm"># ── Filter: Eliminar baja varianza</span>
+vt = VarianceThreshold(threshold=<span class="num">0.01</span>)
+X_var = vt.<span class="fn">fit_transform</span>(X_train)
+
+<span class="cm"># ── Wrapper: RFE con Random Forest</span>
+rf = RandomForestClassifier(n_estimators=<span class="num">100</span>)
+rfe = RFE(estimator=rf, n_features_to_select=<span class="num">15</span>)
+X_rfe = rfe.<span class="fn">fit_transform</span>(X_train, y_train)
+
+<span class="cm"># ── Embedded: Lasso (L1 - pone coeficientes a 0)</span>
+lasso = Lasso(alpha=<span class="num">0.01</span>)
+sel = SelectFromModel(lasso)
+X_lasso = sel.<span class="fn">fit_transform</span>(X_train, y_train)
+
+<span class="cm"># ── Embedded: Feature importance de XGBoost</span>
+<span class="kw">import</span> xgboost <span class="kw">as</span> xgb
+model = xgb.XGBClassifier()
+model.<span class="fn">fit</span>(X_train, y_train)
+importances = model.feature_importances_</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ESCALADO =================== -->
+<div class="section" id="sec-scaling">
+  <div class="sec-heading">Escalado y Normalización</div>
+  <div class="sec-sub">// Poner todas las variables en la misma escala</div>
+
+  <div class="module" style="--accent-color:var(--danger);" id="mod-scale">
+    <div class="module-header" onclick="toggleModule('mod-scale')">
+      <div class="module-icon" style="background:#140808;">↕</div>
+      <div>
+        <div class="module-title">Técnicas de Escalado</div>
+        <div class="module-subtitle">STANDARDSCALER · MINMAX · ROBUST · NORMALIZER · QUANTILE</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--danger)">
+        <button class="mtab active" onclick="switchTab(this,'sc-t1')">¿CUÁNDO USAR CADA UNO?</button>
+        <button class="mtab" onclick="switchTab(this,'sc-t2')">VISUALIZACIÓN</button>
+        <button class="mtab" onclick="switchTab(this,'sc-t3')">CÓDIGO</button>
+      </div>
+      <div class="mpanel active one-col" id="sc-t1">
+        <div class="alert info" style="margin-bottom:16px;">
+          <strong>¿Cuándo NO necesitas escalar?</strong> Modelos basados en árboles (Decision Tree, Random Forest, XGBoost, LightGBM, CatBoost) son <em>invariantes a la escala</em>. Las particiones se basan en comparaciones de orden, no distancias.
+        </div>
+        <table class="nice-table">
+          <tr><th>MÉTODO</th><th>FÓRMULA</th><th>RANGO RESULTADO</th><th>OUTLIERS</th><th>USAR CON</th></tr>
+          <tr><td class="hl">StandardScaler</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px;">(x - μ) / σ</td><td>≈ [-3, 3]</td><td class="no">Sensible</td><td>Regresión, SVM, PCA, KNN, NN</td></tr>
+          <tr><td class="hl">MinMaxScaler</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px;">(x - min) / (max - min)</td><td>[0, 1]</td><td class="no">Muy sensible</td><td>Redes neuronales, imagen, [0,1] requerido</td></tr>
+          <tr><td class="hl">RobustScaler</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px;">(x - Q2) / (Q3 - Q1)</td><td>Variable</td><td class="yes">Robusto</td><td>Datos con outliers, antes de imputar</td></tr>
+          <tr><td class="hl">Normalizer</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px;">x / ||x||</td><td>||x|| = 1</td><td class="partial">Parcial</td><td>NLP, clustering con cosine similarity</td></tr>
+          <tr><td class="hl">QuantileTransformer</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px;">Rank → Gaussiana</td><td>≈ [-3, 3]</td><td class="yes">Robusto</td><td>Distribuciones muy no-normales</td></tr>
+        </table>
+      </div>
+      <div class="mpanel one-col" id="sc-t2">
+        <div class="demo-area">
+          <div class="demo-title">VISUALIZACIÓN — EFECTO DE CADA SCALER</div>
+          <div class="controls">
+            <span class="ctrl-label">SCALER:</span>
+            <button class="ctrl-btn active" onclick="setScalerView('none',this)">Sin escalar</button>
+            <button class="ctrl-btn" onclick="setScalerView('standard',this)">Standard</button>
+            <button class="ctrl-btn" onclick="setScalerView('minmax',this)">MinMax</button>
+            <button class="ctrl-btn" onclick="setScalerView('robust',this)">Robust</button>
+          </div>
+          <canvas id="scaler-canvas" height="220"></canvas>
+          <div id="scaler-insight" class="alert info" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="sc-t3">
+        <div class="code-box"><span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> (
+    StandardScaler, MinMaxScaler, RobustScaler,
+    Normalizer, QuantileTransformer
+)
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+
+<span class="cm"># ⚠ REGLA CRÍTICA: Fit SIEMPRE en train, transform en train y test</span>
+scaler = StandardScaler()
+X_train_sc = scaler.<span class="fn">fit_transform</span>(X_train)  <span class="cm"># fit + transform</span>
+X_test_sc = scaler.<span class="fn">transform</span>(X_test)         <span class="cm"># solo transform</span>
+
+<span class="cm"># ── Usar dentro de un Pipeline (forma correcta)</span>
+pipeline = Pipeline([
+    (<span class="st">'scaler'</span>, RobustScaler()),
+    (<span class="st">'model'</span>, SVR())
+])
+pipeline.<span class="fn">fit</span>(X_train, y_train)
+
+<span class="cm"># ── Diferentes scalers para diferentes columnas</span>
+<span class="kw">from</span> sklearn.compose <span class="kw">import</span> ColumnTransformer
+ct = ColumnTransformer([
+    (<span class="st">'std'</span>, StandardScaler(), [<span class="st">'edad'</span>, <span class="st">'ingreso'</span>]),
+    (<span class="st">'rob'</span>, RobustScaler(), [<span class="st">'precio'</span>]),
+    (<span class="st">'mm'</span>, MinMaxScaler(), [<span class="st">'score'</span>])
+])</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== LEAKAGE =================== -->
+<div class="section" id="sec-leakage">
+  <div class="sec-heading">Data Leakage</div>
+  <div class="sec-sub">// El error más peligroso y silencioso en Machine Learning</div>
+
+  <div class="module" style="--accent-color:var(--danger);" id="mod-leak">
+    <div class="module-header" onclick="toggleModule('mod-leak')">
+      <div class="module-icon" style="background:#140808;">☠</div>
+      <div>
+        <div class="module-title">Data Leakage — El Error Silencioso</div>
+        <div class="module-subtitle">TRAIN-TEST CONTAMINATION · TARGET LEAKAGE · TEMPORAL LEAKAGE</div>
+      </div>
+      <div class="module-chevron">▾</div>
+    </div>
+    <div class="module-body">
+      <div class="module-tabs" style="--accent-color:var(--danger)">
+        <button class="mtab active" onclick="switchTab(this,'lk-t1')">¿QUÉ ES?</button>
+        <button class="mtab" onclick="switchTab(this,'lk-t2')">TIPOS Y EJEMPLOS</button>
+        <button class="mtab" onclick="switchTab(this,'lk-t3')">VISUALIZACIÓN</button>
+        <button class="mtab" onclick="switchTab(this,'lk-t4')">CÓMO EVITARLO</button>
+      </div>
+      <div class="mpanel active one-col" id="lk-t1">
+        <div class="alert danger" style="margin-bottom:16px; font-size:14px;">
+          <strong>⚠ DEFINICIÓN:</strong> Data Leakage ocurre cuando información que NO estaría disponible en producción (en el momento de hacer la predicción) "se filtra" al modelo durante el entrenamiento. El modelo aprende a hacer trampa.
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="explain" style="--accent-color:var(--danger)">
+            <div class="explain-title">¿POR QUÉ ES TAN PELIGROSO?</div>
+            <p>El modelo muestra métricas <strong>artificialmente excelentes</strong> en validación (accuracy, AUC, RMSE muy buenos).</p>
+            <p>Pero al deployar en producción, <strong>el rendimiento colapsa</strong> porque la información filtrada ya no está disponible.</p>
+            <p>El equipo ha "desperdiciado" semanas optimizando un modelo que no sirve en producción.</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--warn)">
+            <div class="explain-title">SEÑAL DE ALERTA</div>
+            <p>Si tu modelo tiene <strong>métricas demasiado buenas para ser verdad</strong> (AUC > 0.99, accuracy > 98%), probablemente hay leakage.</p>
+            <p>Si al deployar el rendimiento baja drásticamente, confirma leakage.</p>
+            <p>Si una feature tiene correlación muy alta con el target (> 0.95), investiga por qué.</p>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="lk-t2">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="explain" style="--accent-color:var(--danger)">
+            <div class="explain-title">TIPO 1: LEAKAGE DE DATOS DE TEST</div>
+            <p><strong>Ejemplo:</strong> Aplicas StandardScaler.fit() sobre todo el dataset antes de hacer el split. El scaler "conoce" la media y varianza del test set.</p>
+            <p><strong>Por qué es leakage:</strong> En producción, el scaler fue ajustado con datos de test que "vendrán en el futuro".</p>
+            <p><strong>Solución:</strong> Siempre hacer split primero, luego fit del scaler solo en train.</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--danger)">
+            <div class="explain-title">TIPO 2: TARGET LEAKAGE</div>
+            <p><strong>Ejemplo:</strong> Para predecir si un cliente abandonará (churn), incluyes "número de llamadas al servicio al cliente en el último mes". Pero esa info solo se sabe después de que el cliente ya está por irse.</p>
+            <p><strong>Solución:</strong> Preguntarte: ¿Esta feature estaba disponible ANTES de hacer la predicción?</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--warn)">
+            <div class="explain-title">TIPO 3: LEAKAGE TEMPORAL</div>
+            <p><strong>Ejemplo:</strong> En series de tiempo, calculas un rolling mean sin verificar que no incluye datos futuros. O usas datos de validación para calcular estadísticas de grupo.</p>
+            <p><strong>Solución:</strong> TimeSeriesSplit, asegurar que lags y rolling windows sean "look-back only".</p>
+          </div>
+          <div class="explain" style="--accent-color:var(--warn)">
+            <div class="explain-title">TIPO 4: TARGET ENCODING SIN CV</div>
+            <p><strong>Ejemplo:</strong> Calculas target encoding usando todo el training set, incluyendo la observación misma → la categoría "conoce" su propio target.</p>
+            <p><strong>Solución:</strong> Target encoding siempre con cross-validation o leave-one-out encoding.</p>
+          </div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="lk-t3">
+        <div class="demo-area">
+          <div class="demo-title">VISUALIZACIÓN — EL EFECTO DEL LEAKAGE EN MÉTRICAS</div>
+          <canvas id="leakage-canvas" height="200"></canvas>
+          <div class="controls" style="margin-top:12px;">
+            <span class="ctrl-label">ESCENARIO:</span>
+            <button class="ctrl-btn active" onclick="setLeakageView('clean',this)">Sin Leakage</button>
+            <button class="ctrl-btn" onclick="setLeakageView('leaky',this)">Con Leakage</button>
+            <button class="ctrl-btn" onclick="setLeakageView('production',this)">Resultado Producción</button>
+          </div>
+          <div id="leakage-insight" class="alert danger" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="mpanel one-col" id="lk-t4">
+        <div class="code-box"><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+
+<span class="cm"># ✅ CORRECTO: Split PRIMERO, luego fit del preprocessor</span>
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="num">0.2</span>)
+scaler = StandardScaler()
+X_train_sc = scaler.<span class="fn">fit_transform</span>(X_train)   <span class="cm"># fit solo en train</span>
+X_test_sc = scaler.<span class="fn">transform</span>(X_test)          <span class="cm"># transform en test</span>
+
+<span class="cm"># ✅ MEJOR: Usar Pipeline (evita errores humanos)</span>
+pipe = Pipeline([(<span class="st">'sc'</span>, StandardScaler()), (<span class="st">'model'</span>, LogisticRegression())])
+pipe.<span class="fn">fit</span>(X_train, y_train)  <span class="cm"># scaler se fit solo en train automáticamente</span>
+pipe.<span class="fn">score</span>(X_test, y_test)
+
+<span class="cm"># ✅ Target Encoding correcto con cross-val</span>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> cross_val_predict
+encoded_oof = cross_val_predict(TargetEncoder(), X[[<span class="st">'ciudad'</span>]], y, cv=<span class="num">5</span>)
+
+<span class="cm"># ✅ Series de tiempo: usar TimeSeriesSplit</span>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> TimeSeriesSplit
+tscv = TimeSeriesSplit(n_splits=<span class="num">5</span>)
+<span class="cm"># Garantiza que siempre validamos en datos FUTUROS al train</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- main -->
+
+<script>
+// ==============================
+// NAV & SECTIONS
+// ==============================
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('sec-'+id).classList.add('visible');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Trigger renders
+  setTimeout(() => initAllCharts(), 50);
+}
+
+function toggleModule(id) {
+  const m = document.getElementById(id);
+  m.classList.toggle('open');
+  if(m.classList.contains('open')) setTimeout(()=>initAllCharts(),50);
+}
+
+function switchTab(btn, panelId) {
+  const body = btn.closest('.module-body');
+  body.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
+  body.querySelectorAll('.mpanel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+  setTimeout(()=>initAllCharts(),50);
+}
+
+// ==============================
+// CANVAS UTILITIES
+// ==============================
+function getCtx(id) {
+  const c = document.getElementById(id);
+  if(!c) return null;
+  const r = c.getBoundingClientRect();
+  if(r.width === 0) return null;
+  c.width = r.width * window.devicePixelRatio || c.offsetWidth * 2;
+  c.height = c.height * window.devicePixelRatio || c.height * 2;
+  const ctx = c.getContext('2d');
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  c._w = r.width || c.offsetWidth;
+  c._h = c.getBoundingClientRect().height || 180;
+  return ctx;
+}
+
+function clearCanvas(id) {
+  const c = document.getElementById(id);
+  if(!c) return null;
+  const W = c.offsetWidth; const H = c.offsetHeight || 180;
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  return {ctx,W,H};
+}
+
+const C = {
+  g1:'#22d3a5', g2:'#818cf8', g3:'#fb923c', g4:'#f472b6',
+  g5:'#38bdf8', g6:'#a3e635', danger:'#f87171', warn:'#fbbf24',
+  bg:'#07080f', surface:'#141620', border:'#252838', muted:'#5a5d7a', text:'#e2e4f0'
+};
+
+function rng(seed){let s=seed;return()=>{s=(s*16807+0)%2147483647;return(s-1)/2147483646};}
+
+// ==============================
+// IMPACT BARS
+// ==============================
+function drawImpactBars() {
+  const el = document.getElementById('impact-bars');
+  if(!el||el.children.length>0) return;
+  const items = [
+    {label:'Sin FE — Modelo base', val:62, color:C.muted},
+    {label:'+ Transformaciones numéricas', val:71, color:C.g5},
+    {label:'+ Encoding correcto', val:77, color:C.g2},
+    {label:'+ Features temporales', val:83, color:C.g3},
+    {label:'+ Selección de features', val:88, color:C.g1},
+    {label:'+ Interacciones de dominio', val:93, color:C.g6},
+  ];
+  items.forEach(item=>{
+    const row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+    row.innerHTML=`<div style="width:200px;font-size:11px;color:#8090a8;font-family:'IBM Plex Mono',monospace;flex-shrink:0">${item.label}</div>
+      <div style="flex:1;height:20px;background:#1a1d2e;border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:0%;background:${item.color};border-radius:4px;transition:width 1.2s ease;display:flex;align-items:center;padding-left:8px;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#000;font-weight:600;white-space:nowrap;">${item.val}%</span>
+        </div>
+      </div>`;
+    el.appendChild(row);
+    setTimeout(()=>row.querySelector('div > div').style.width=item.val+'%', 200);
+  });
+}
+
+// ==============================
+// RAW vs LOG SCATTER
+// ==============================
+function drawScatters() {
+  ['raw-scatter','log-scatter'].forEach(id=>{
+    const d = clearCanvas(id);
+    if(!d) return;
+    const {ctx,W,H}=d;
+    const r = rng(42);
+    const px=40,py=20,bw=W-px-10,bh=H-py-30;
+    ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle=C.border; ctx.lineWidth=1;
+    ctx.strokeRect(px,py,bw,bh);
+    // axes
+    ctx.fillStyle=C.muted; ctx.font=`10px 'IBM Plex Mono'`;
+    // generate data
+    const N=80;
+    const areas=[], prices=[];
+    for(let i=0;i<N;i++){
+      const a=r()*200+50;
+      const p=Math.exp(0.015*a+r()*0.8+5);
+      areas.push(a); prices.push(p);
+    }
+    const maxA=Math.max(...areas), maxP=Math.max(...prices);
+    const minP=Math.min(...prices);
+    const useLog = id==='log-scatter';
+    const yVals = useLog ? prices.map(p=>Math.log(p)) : prices;
+    const minY=Math.min(...yVals), maxY=Math.max(...yVals);
+    // grid
+    ctx.strokeStyle='#1e2030'; ctx.lineWidth=0.5;
+    for(let i=1;i<5;i++){
+      const y=py+bh*i/5;
+      ctx.beginPath(); ctx.moveTo(px,y); ctx.lineTo(px+bw,y); ctx.stroke();
+    }
+    // regression line
+    const xm=areas.reduce((a,b)=>a+b)/N;
+    const ym=yVals.reduce((a,b)=>a+b)/N;
+    let num=0,den=0;
+    for(let i=0;i<N;i++){num+=(areas[i]-xm)*(yVals[i]-ym);den+=(areas[i]-xm)**2;}
+    const m=num/den, b2=ym-m*xm;
+    const x1=Math.min(...areas), x2=Math.max(...areas);
+    const sx=v=>px+bw*(v-0)/(maxA);
+    const sy=v=>py+bh*(1-(v-minY)/(maxY-minY));
+    ctx.strokeStyle=useLog?C.g1:'#555870'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(sx(x1),sy(m*x1+b2)); ctx.lineTo(sx(x2),sy(m*x2+b2)); ctx.stroke();
+    // dots
+    for(let i=0;i<N;i++){
+      ctx.beginPath();
+      ctx.arc(sx(areas[i]),sy(yVals[i]),3,0,Math.PI*2);
+      ctx.fillStyle=useLog?C.g1+'90':C.g5+'70';
+      ctx.fill();
+    }
+    // labels
+    ctx.fillStyle=C.muted; ctx.font=`9px 'IBM Plex Mono'`;
+    ctx.fillText('Área (m²)',px+bw/2-20,H-6);
+    const ylabel=useLog?'log(Precio)':'Precio';
+    ctx.save(); ctx.translate(12,py+bh/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText(ylabel,-20,0); ctx.restore();
+  });
+}
+
+// ==============================
+// DISTRIBUTION DEMO
+// ==============================
+let currentDist='exponential';
+function setDist(d,btn){
+  currentDist=d;
+  document.querySelectorAll('#log-t2 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawDistributions();
+}
+
+function generateDist(type, N=300) {
+  const r=rng(123);
+  const data=[];
+  if(type==='exponential'){for(let i=0;i<N;i++) data.push(-Math.log(1-r())*2);}
+  else if(type==='lognormal'){for(let i=0;i<N;i++){let u=0;for(let j=0;j<6;j++)u+=r();data.push(Math.exp((u-3)*0.8));}}
+  else if(type==='pareto'){for(let i=0;i<N;i++) data.push(Math.pow(r()+0.001,-1/1.5));}
+  return data;
+}
+
+function drawHistogram(canvasId, data, color, label) {
+  const d = clearCanvas(canvasId); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const bins=25;
+  const min=Math.min(...data), max=Math.max(...data)*0.95;
+  const binW=(max-min)/bins;
+  const counts=new Array(bins).fill(0);
+  data.forEach(v=>{if(v<=max){const i=Math.min(Math.floor((v-min)/binW),bins-1);counts[i]++;}});
+  const maxC=Math.max(...counts);
+  const px=30,py=10,bw=W-px-10,bh=H-py-25;
+  // bars
+  counts.forEach((c,i)=>{
+    const x=px+i*(bw/bins);
+    const bh2=bh*(c/maxC);
+    const alpha=0.7;
+    ctx.fillStyle=color+'b0';
+    ctx.fillRect(x,py+bh-bh2,bw/bins-1,bh2);
+    ctx.strokeStyle=color; ctx.lineWidth=0.5;
+    ctx.strokeRect(x,py+bh-bh2,bw/bins-1,bh2);
+  });
+  // axis
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py+bh); ctx.lineTo(px+bw,py+bh); ctx.stroke();
+  // skewness
+  const mean=data.reduce((a,b)=>a+b)/data.length;
+  const std=Math.sqrt(data.map(x=>(x-mean)**2).reduce((a,b)=>a+b)/data.length);
+  const skew=data.map(x=>((x-mean)/std)**3).reduce((a,b)=>a+b)/data.length;
+  return skew;
+}
+
+function drawDistributions() {
+  const raw=generateDist(currentDist);
+  const logged=raw.map(x=>Math.log1p(x));
+  const s1=drawHistogram('dist-before',raw,C.g3,'original');
+  const s2=drawHistogram('dist-after',logged,C.g1,'log');
+  // skew bars
+  function skewHtml(skew, color) {
+    const abs=Math.min(Math.abs(skew),3);
+    const pct=abs/3*100;
+    const label=Math.abs(skew)<0.5?'Simétrica':skew>0?'Sesgo positivo ↗':'Sesgo negativo ↙';
+    return `<span style="font-size:10px;color:${C.muted};font-family:'IBM Plex Mono';width:120px;flex-shrink:0">skewness: <span style="color:${color}">${skew?.toFixed(2)}</span></span>
+      <div style="flex:1;height:6px;background:${C.surface};border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;"></div>
+      </div>
+      <span style="font-size:10px;color:${color};font-family:'IBM Plex Mono';width:100px;flex-shrink:0">${label}</span>`;
+  }
+  document.getElementById('skew-before').innerHTML=skewHtml(s1,C.g3);
+  document.getElementById('skew-after').innerHTML=skewHtml(s2,C.g1);
+  const insights={
+    exponential:'La distribución exponencial es clásica en tiempos de espera, llamadas de soporte, tiempo hasta fallo. Después de log1p(), la distribución se acerca a la normalidad → los modelos lineales y las redes neuronales funcionan mucho mejor.',
+    lognormal:'La distribución log-normal aparece naturalmente en precios de activos, salarios, tamaño de empresas. El log la convierte en normal → la regresión lineal puede capturar relaciones lineales en el espacio log.',
+    pareto:'La distribución de Pareto (ley de potencias) aparece en distribución de riqueza, tráfico web, seguidores en redes. Cola extremadamente larga. La transformación log comprime drasticamente los valores extremos.'
+  };
+  document.getElementById('dist-insight').innerHTML=`<strong>Insight:</strong> ${insights[currentDist]}`;
+}
+
+// ==============================
+// BINNING DEMO
+// ==============================
+let binType='width';
+function setBinType(t,btn){
+  binType=t;
+  document.querySelectorAll('#bin-t2 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawBinDemo();
+}
+function updateBinDemo(){
+  const v=document.getElementById('bin-slider').value;
+  document.getElementById('bin-val').textContent=v;
+  drawBinDemo();
+}
+
+function drawBinDemo() {
+  const d=clearCanvas('bin-canvas'); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const nBins=parseInt(document.getElementById('bin-slider')?.value||5);
+  const r=rng(77);
+  const N=400;
+  const data=[];
+  for(let i=0;i<N;i++){
+    let u=0; for(let j=0;j<4;j++) u+=r();
+    data.push(u*30+20+(r()>0.8?r()*60:0));
+  }
+  const min=Math.min(...data), max=Math.max(...data);
+  let edges=[];
+  if(binType==='width'){
+    for(let i=0;i<=nBins;i++) edges.push(min+(max-min)*i/nBins);
+  } else {
+    const sorted=[...data].sort((a,b)=>a-b);
+    for(let i=0;i<=nBins;i++) edges.push(sorted[Math.floor(i*(N-1)/nBins)]);
+  }
+  const counts=new Array(nBins).fill(0);
+  data.forEach(v=>{
+    for(let i=0;i<nBins;i++){
+      if(v>=edges[i]&&v<edges[i+1]){counts[i]++;break;}
+      if(i===nBins-1&&v>=edges[i]) counts[i]++;
+    }
+  });
+  const maxC=Math.max(...counts);
+  const px=35,py=15,bw=W-px-15,bh=H-py-35;
+  const colors=[C.g1,C.g2,C.g3,C.g4,C.g5,C.g6,'#c084fc','#34d399','#f87171','#fbbf24',
+    C.g1,C.g2,C.g3,C.g4,C.g5,C.g6,'#c084fc','#34d399','#f87171','#fbbf24'];
+  counts.forEach((c,i)=>{
+    const x=px+bw*i/nBins;
+    const bh2=bh*(c/maxC);
+    ctx.fillStyle=colors[i%colors.length]+'99';
+    ctx.fillRect(x+1,py+bh-bh2,bw/nBins-2,bh2);
+    ctx.strokeStyle=colors[i%colors.length]; ctx.lineWidth=1;
+    ctx.strokeRect(x+1,py+bh-bh2,bw/nBins-2,bh2);
+    // edge label
+    if(i<4||i===nBins-1){
+      ctx.fillStyle=C.muted; ctx.font=`9px 'IBM Plex Mono'`;
+      ctx.fillText(edges[i].toFixed(0),x,py+bh+15);
+    }
+  });
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py+bh); ctx.lineTo(px+bw,py+bh); ctx.stroke();
+  const tips={
+    2:'Con solo 2 bins pierdes demasiada información. Los modelos lineales no podrán distinguir matices dentro de cada grupo.',
+    3:'3-4 bins: útil para capturar rangos cualitativos con significado (bajo/medio/alto). Simple e interpretable.',
+    5:'5-7 bins: balance común en práctica. Captura la forma general de la distribución sin fragmentar demasiado.',
+    10:'8-12 bins: mayor detalle, pero puede introducir ruido en muestras pequeñas. Bueno con >1000 observaciones.',
+    15:'Con muchos bins la discretización pierde utilidad. Considera features continuas o polynomial features.',
+  };
+  let tipKey=nBins<=2?2:nBins<=4?3:nBins<=7?5:nBins<=12?10:15;
+  document.getElementById('bin-insight').innerHTML=`<strong>N=${nBins} bins (${binType==='width'?'Equal-Width':'Equal-Frequency'}):</strong> ${tips[tipKey]}`;
+}
+
+// ==============================
+// POLYNOMIAL DEMO
+// ==============================
+let polyDeg=1;
+function setPolyDeg(d,btn){
+  polyDeg=d;
+  document.querySelectorAll('#poly-t2 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawPolyDemo();
+}
+
+function drawPolyDemo(){
+  const d=clearCanvas('poly-canvas'); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const r=rng(55);
+  const N=60;
+  const xs=[],ys=[];
+  for(let i=0;i<N;i++){
+    const x=r()*10-5;
+    const y=0.3*x*x-0.2*x+1+r()*2-1;
+    xs.push(x); ys.push(y);
+  }
+  const px=35,py=15,bw=W-px-15,bh=H-py-30;
+  const minX=Math.min(...xs),maxX=Math.max(...xs);
+  const minY=Math.min(...ys)-1,maxY=Math.max(...ys)+1;
+  const sx=v=>px+bw*(v-minX)/(maxX-minX);
+  const sy=v=>py+bh*(1-(v-minY)/(maxY-minY));
+  // grid
+  ctx.strokeStyle='#1e2030'; ctx.lineWidth=0.5;
+  for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(px,py+bh*i/5);ctx.lineTo(px+bw,py+bh*i/5);ctx.stroke();}
+  // dots
+  for(let i=0;i<N;i++){
+    ctx.beginPath(); ctx.arc(sx(xs[i]),sy(ys[i]),4,0,Math.PI*2);
+    ctx.fillStyle=C.g5+'90'; ctx.fill();
+  }
+  // fit polynomial
+  function polyFit(xs,ys,deg){
+    const n=xs.length;
+    const A=[]; const b=[];
+    for(let i=0;i<n;i++){
+      const row=[]; for(let j=0;j<=deg;j++) row.push(Math.pow(xs[i],j));
+      A.push(row); b.push(ys[i]);
+    }
+    // normal equations: (A'A)c = A'b  — simple for deg<=3
+    function matMul(A,B){const r=A.length,c=B[0].length,k=B.length;const C=Array.from({length:r},()=>new Array(c).fill(0));for(let i=0;i<r;i++)for(let j=0;j<c;j++)for(let l=0;l<k;l++)C[i][j]+=A[i][l]*B[l][j];return C;}
+    function transpose(M){return M[0].map((_,i)=>M.map(r=>r[i]));}
+    const At=transpose(A);
+    const AtA=matMul(At,A);
+    const Atb=matMul(At,b.map(v=>[v])).map(r=>r[0]);
+    // Gaussian elimination
+    const m=AtA.length;
+    for(let col=0;col<m;col++){
+      let maxR=col;
+      for(let row=col+1;row<m;row++) if(Math.abs(AtA[row][col])>Math.abs(AtA[maxR][col])) maxR=row;
+      [AtA[col],AtA[maxR]]=[AtA[maxR],AtA[col]]; [Atb[col],Atb[maxR]]=[Atb[maxR],Atb[col]];
+      for(let row=col+1;row<m;row++){
+        const f=AtA[row][col]/AtA[col][col];
+        for(let k=col;k<m;k++) AtA[row][k]-=f*AtA[col][k];
+        Atb[row]-=f*Atb[col];
+      }
+    }
+    const c=new Array(m).fill(0);
+    for(let i=m-1;i>=0;i--){c[i]=Atb[i];for(let j=i+1;j<m;j++)c[i]-=AtA[i][j]*c[j];c[i]/=AtA[i][i];}
+    return c;
+  }
+  const coeffs=polyFit(xs,ys,polyDeg);
+  const colors=[C.g5,C.g4,C.g1];
+  ctx.strokeStyle=colors[polyDeg-1]; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const xv=minX+(maxX-minX)*i/200;
+    let yv=0; for(let j=0;j<=polyDeg;j++) yv+=coeffs[j]*Math.pow(xv,j);
+    if(yv<minY||yv>maxY) continue;
+    if(i===0) ctx.moveTo(sx(xv),sy(yv)); else ctx.lineTo(sx(xv),sy(yv));
+  }
+  ctx.stroke();
+  // R²
+  const ymean=ys.reduce((a,b)=>a+b)/N;
+  let ss_res=0,ss_tot=0;
+  for(let i=0;i<N;i++){
+    let yhat=0; for(let j=0;j<=polyDeg;j++) yhat+=coeffs[j]*Math.pow(xs[i],j);
+    ss_res+=(ys[i]-yhat)**2; ss_tot+=(ys[i]-ymean)**2;
+  }
+  const r2=1-ss_res/ss_tot;
+  const r2el=document.getElementById('poly-r2');
+  if(r2el){
+    const descs=['La recta no puede capturar la curvatura real de los datos.','El polinomio de grado 2 captura la parábola subyacente perfectamente.','Grado 3 mejora marginalmente pero ya con riesgo de overfitting.'];
+    r2el.innerHTML=`R² = ${r2.toFixed(3)} — ${descs[polyDeg-1]}`;
+  }
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,py+bh);ctx.lineTo(px+bw,py+bh);ctx.stroke();
+}
+
+// ==============================
+// ENCODING VISUAL
+// ==============================
+let encView='ohe';
+function setEncView(v,btn){
+  encView=v;
+  document.querySelectorAll('#enc-t3 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawEncoding();
+}
+
+function drawEncoding(){
+  const d=clearCanvas('enc-canvas'); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const cities=['Bogotá','Medellín','Cali','Barranquilla','Cartagena'];
+  const counts=[120,90,65,45,30];
+  const targets=[450,380,290,200,340];
+  const total=counts.reduce((a,b)=>a+b);
+  const rowH=36, startY=20, px=140;
+  const bw=W-px-20;
+  const encodings={
+    ohe:{label:'One-Hot Encoding',fn:(i)=>cities.map((_,j)=>j===i?1:0),render:(vals,i,y)=>{
+      vals.forEach((v,j)=>{
+        const x=px+j*(bw/5)+2;
+        ctx.fillStyle=v===1?C.g2+'c0':'#1a1d2e';
+        ctx.strokeStyle=v===1?C.g2:C.border;
+        ctx.lineWidth=1;
+        const w=bw/5-4; const bh=rowH-8;
+        ctx.beginPath(); ctx.roundRect(x,y,w,bh,3); ctx.fill(); ctx.stroke();
+        ctx.fillStyle=v===1?'#fff':C.muted; ctx.font=`bold 11px 'IBM Plex Mono'`;
+        ctx.textAlign='center'; ctx.fillText(v,x+w/2,y+bh/2+4);
+      });
+    }},
+    label:{label:'Label Encoding',fn:(i)=>[i],render:(vals,i,y)=>{
+      const x=px+2; const w=60; const bh=rowH-8;
+      ctx.fillStyle=C.g3+'90'; ctx.strokeStyle=C.g3; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.roundRect(x,y,w,bh,3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font=`bold 14px 'IBM Plex Mono'`;
+      ctx.textAlign='center'; ctx.fillText(vals[0],x+w/2,y+bh/2+5);
+    }},
+    target:{label:'Target Encoding (media del target)',fn:(i)=>[targets[i]],render:(vals,i,y)=>{
+      const x=px+2; const bh=rowH-8;
+      const norm=vals[0]/Math.max(...targets);
+      const w=Math.max((bw-4)*norm,4);
+      ctx.fillStyle=C.g4+'80'; ctx.strokeStyle=C.g4; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.roundRect(x,y,w,bh,3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=C.text; ctx.font=`11px 'IBM Plex Mono'`;
+      ctx.textAlign='left'; ctx.fillText(`$${vals[0]}K`,x+w+6,y+bh/2+4);
+    }},
+    freq:{label:'Frequency Encoding',fn:(i)=>[counts[i]/total],render:(vals,i,y)=>{
+      const x=px+2; const bh=rowH-8;
+      const w=Math.max((bw-4)*vals[0],4);
+      ctx.fillStyle=C.g5+'80'; ctx.strokeStyle=C.g5; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.roundRect(x,y,w,bh,3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=C.text; ctx.font=`11px 'IBM Plex Mono'`;
+      ctx.textAlign='left'; ctx.fillText(`${(vals[0]*100).toFixed(1)}%`,x+w+6,y+bh/2+4);
+    }},
+  };
+  const enc=encodings[encView];
+  // header
+  ctx.fillStyle=C.muted; ctx.font=`bold 10px 'IBM Plex Mono'`; ctx.textAlign='left';
+  ctx.fillText(enc.label,px,14);
+  if(encView==='ohe'){
+    cities.forEach((c,j)=>{
+      ctx.fillStyle=C.muted; ctx.font=`9px 'IBM Plex Mono'`; ctx.textAlign='center';
+      ctx.fillText(c.substring(0,3),px+j*(bw/5)+bw/10,startY+8);
+    });
+  }
+  cities.forEach((city,i)=>{
+    const y=startY+20+i*rowH;
+    ctx.fillStyle=C.text; ctx.font=`12px 'Outfit'`; ctx.textAlign='right';
+    ctx.fillText(city,px-10,y+rowH/2);
+    enc.render(enc.fn(i),i,y);
+  });
+  const insights={
+    ohe:'One-Hot crea 5 columnas binarias (una por ciudad). El modelo lineal puede asignar un coeficiente independiente a cada ciudad. Ninguna ciudad es "mayor" que otra.',
+    label:'Label Encoding asigna 0→Bogotá, 1→Medellín, ..., 4→Cartagena. Un modelo lineal interpretará Cartagena como "4x mayor" que Bogotá — ¡error conceptual! Solo usar con árboles.',
+    target:'Target Encoding reemplaza cada ciudad por la media del target (ej: precio promedio de arriendo). Muy informativo pero requiere cross-validation para evitar que la propia observación "se vea a sí misma".',
+    freq:'Frequency Encoding: Bogotá aparece en 34% de los datos → su valor es 0.34. Simple, sin leakage. Pierde distinción cuando dos ciudades tienen igual frecuencia.'
+  };
+  document.getElementById('enc-insight').innerHTML=`<strong>¿Qué ves aquí?</strong> ${insights[encView]}`;
+}
+
+// ==============================
+// CYCLIC DEMO
+// ==============================
+let cyclicView='raw';
+function setCyclicView(v,btn){
+  cyclicView=v;
+  document.querySelectorAll('#time-t2 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawCyclic();
+}
+
+function drawCyclic(){
+  const d=clearCanvas('cyclic-canvas'); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  if(cyclicView==='raw'){
+    const px=35,py=20,bw=W-px-20,bh=H-py-30;
+    const barW=bw/12-4;
+    months.forEach((m,i)=>{
+      const x=px+i*(bw/12)+2;
+      ctx.fillStyle=C.g3+'90'; ctx.strokeStyle=C.g3; ctx.lineWidth=1;
+      const bh2=bh*(i+1)/12;
+      ctx.fillRect(x,py+bh-bh2,barW,bh2);
+      ctx.fillStyle=C.muted; ctx.font=`9px 'IBM Plex Mono'`; ctx.textAlign='center';
+      ctx.fillText(m,x+barW/2,H-8);
+      ctx.fillStyle=C.text; ctx.font=`bold 10px 'IBM Plex Mono'`;
+      ctx.fillText(i+1,x+barW/2,py+bh-bh2-4);
+    });
+    ctx.strokeStyle=C.border; ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,py+bh);ctx.lineTo(px+bw,py+bh);ctx.stroke();
+    ctx.fillStyle=C.danger+'99'; ctx.font=`11px 'IBM Plex Mono'`;
+    ctx.textAlign='center';
+    ctx.fillText('PROBLEMA: distancia(Dic=12, Ene=1) = 11 — ¡Pero son adyacentes!',W/2,H-2);
+    document.getElementById('cyclic-insight').innerHTML='<strong>Problema:</strong> Para el modelo, Diciembre (12) y Enero (1) están a 11 unidades. Febrero (2) está más cerca de Enero que Diciembre. Pero en realidad Dic y Ene están a 1 mes de distancia.';
+  } else {
+    // sin/cos
+    const cx=W/2, cy=H/2, rad=Math.min(W,H)*0.38;
+    ctx.strokeStyle=C.border; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.stroke();
+    months.forEach((m,i)=>{
+      const angle=(i/12)*Math.PI*2 - Math.PI/2;
+      const x=cx+Math.cos(angle)*rad;
+      const y=cy+Math.sin(angle)*rad;
+      ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2);
+      ctx.fillStyle=C.g1+'c0'; ctx.fill();
+      ctx.strokeStyle=C.g1; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle=C.text; ctx.font=`10px 'Outfit'`; ctx.textAlign='center';
+      const lx=cx+Math.cos(angle)*(rad+20);
+      const ly=cy+Math.sin(angle)*(rad+20)+4;
+      ctx.fillText(m,lx,ly);
+      ctx.fillStyle=C.muted; ctx.font=`8px 'IBM Plex Mono'`; ctx.textAlign='center';
+      ctx.fillText(`${i+1}`,x,y+3);
+    });
+    // highlight dic-ene distance
+    const a1=(11/12)*Math.PI*2-Math.PI/2;
+    const a2=(0/12)*Math.PI*2-Math.PI/2;
+    ctx.strokeStyle=C.g1; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a1)*rad,cy+Math.sin(a1)*rad);
+    ctx.lineTo(cx+Math.cos(a2)*rad,cy+Math.sin(a2)*rad);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle=C.g1; ctx.font=`10px 'IBM Plex Mono'`; ctx.textAlign='center';
+    ctx.fillText('1 paso ✓',cx,cy-8);
+    document.getElementById('cyclic-insight').innerHTML='<strong>Solución sin/cos:</strong> Representar el mes como punto en un círculo. Diciembre y Enero están adyacentes (1 paso). La distancia euclidiana entre cualquier par de meses refleja su proximidad real en el año.';
+  }
+}
+
+// ==============================
+// LAGS DEMO
+// ==============================
+let lagView='raw';
+function setLagView(v,btn){
+  lagView=v;
+  document.querySelectorAll('#time-t3 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawLagDemo();
+}
+
+function drawLagDemo(){
+  const d=clearCanvas('lag-canvas'); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const r=rng(99);
+  const N=60;
+  const raw=[];
+  let v=100;
+  for(let i=0;i<N;i++){v+=r()*12-6+Math.sin(i/7)*5; raw.push(Math.max(0,v));}
+  const lag7=raw.map((_,i)=>i>=7?raw[i-7]:null);
+  const roll7=raw.map((_,i)=>{if(i<6)return null;let s=0;for(let j=i-6;j<=i;j++)s+=raw[j];return s/7;});
+  const px=30,py=15,bw=W-px-15,bh=H-py-20;
+  const minY=Math.min(...raw)*0.95, maxY=Math.max(...raw)*1.05;
+  const sx=i=>px+bw*i/(N-1);
+  const sy=v=>py+bh*(1-(v-minY)/(maxY-minY));
+  function drawLine(data, color, dash=[], lw=1.5, alpha=1){
+    ctx.strokeStyle=color; ctx.lineWidth=lw;
+    ctx.setLineDash(dash); ctx.globalAlpha=alpha;
+    ctx.beginPath();
+    let first=true;
+    data.forEach((v,i)=>{
+      if(v===null) return;
+      if(first){ctx.moveTo(sx(i),sy(v));first=false;} else ctx.lineTo(sx(i),sy(v));
+    });
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+  }
+  // grid
+  ctx.strokeStyle='#1e2030'; ctx.lineWidth=0.5;
+  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(px,py+bh*i/4);ctx.lineTo(px+bw,py+bh*i/4);ctx.stroke();}
+  if(lagView==='raw'||lagView==='all') drawLine(raw,C.g5,[], 2);
+  if(lagView==='lag'||lagView==='all') drawLine(lag7,C.g3,[5,3], 1.8, lagView==='lag'?1:0.7);
+  if(lagView==='rolling'||lagView==='all') drawLine(roll7,C.g1,[], lagView==='rolling'?2.5:1.8, lagView==='rolling'?1:0.8);
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,py+bh);ctx.lineTo(px+bw,py+bh);ctx.stroke();
+  // legend
+  const legend=[];
+  if(lagView==='raw'||lagView==='all') legend.push({c:C.g5,l:'Original'});
+  if(lagView==='lag'||lagView==='all') legend.push({c:C.g3,l:'Lag-7 (hace 7 días)'});
+  if(lagView==='rolling'||lagView==='all') legend.push({c:C.g1,l:'Rolling Mean 7d'});
+  legend.forEach((l,i)=>{
+    ctx.fillStyle=l.c; ctx.fillRect(px+i*140,py-2,12,3);
+    ctx.fillStyle=C.muted; ctx.font=`9px 'IBM Plex Mono'`; ctx.textAlign='left';
+    ctx.fillText(l.l,px+i*140+16,py+2);
+  });
+  const insights={
+    raw:'La serie original captura la dinámica de ventas diarias. Por sí sola, es difícil que un modelo prediga el próximo valor sin contexto temporal.',
+    lag:'Lag-7 desplaza la serie 7 días atrás. Ahora el modelo puede "ver" las ventas de la semana pasada para predecir hoy. Captura autocorrelación y patrones semanales.',
+    rolling:'El rolling mean de 7 días suaviza el ruido y expone la tendencia local. El modelo puede aprender si las ventas están subiendo o bajando en promedio.',
+    all:'Combinando las 3 líneas: la señal original, su lag para detectar patrones históricos, y el rolling mean para la tendencia → el modelo tiene mucha más información para predecir.'
+  };
+  document.getElementById('lag-insight').innerHTML=`<strong>${lagView==='all'?'Vista completa':'Insight'}:</strong> ${insights[lagView]}`;
+}
+
+// ==============================
+// FEATURE IMPORTANCE DEMO
+// ==============================
+let importanceData=null;
+function regenerateImportance(){
+  const feats=['precio_m2','ubicacion_target','edad_casa','habitaciones_log','distancia_metro','piso_ratio','area_total','garajes','estrato_freq','tiene_balcon'];
+  const r=rng(Date.now()%999);
+  const vals=feats.map(()=>r());
+  const total=vals.reduce((a,b)=>a+b);
+  importanceData=feats.map((f,i)=>({f,v:vals[i]/total})).sort((a,b)=>b.v-a.v);
+  drawImportance();
+}
+
+function drawImportance(){
+  if(!importanceData) regenerateImportance(); else {
+    const d=clearCanvas('importance-canvas'); if(!d) return;
+    const {ctx,W,H}=d;
+    ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+    const N=importanceData.length;
+    const rowH=(H-20)/N;
+    const px=160, bw=W-px-60;
+    const maxV=importanceData[0].v;
+    const colors=[C.g1,C.g1,C.g2,C.g2,C.g2,C.g3,C.g3,C.muted,C.muted,C.muted];
+    importanceData.forEach(({f,v},i)=>{
+      const y=10+i*rowH;
+      ctx.fillStyle=C.muted; ctx.font=`11px 'IBM Plex Mono'`; ctx.textAlign='right';
+      ctx.fillText(f,px-8,y+rowH*0.6);
+      const bh=rowH*0.55;
+      const fw=bw*(v/maxV);
+      ctx.fillStyle=colors[i]+'99'; ctx.strokeStyle=colors[i]; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.roundRect(px,y+rowH*0.18,fw,bh,3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=C.text; ctx.font=`bold 10px 'IBM Plex Mono'`; ctx.textAlign='left';
+      ctx.fillText(`${(v*100).toFixed(1)}%`,px+fw+6,y+rowH*0.55);
+    });
+    const top3=importanceData.slice(0,3).map(d=>d.f).join(', ');
+    const low3=importanceData.slice(-3).map(d=>d.f).join(', ');
+    document.getElementById('importance-insight').innerHTML=`<strong>Top features:</strong> ${top3} explican el ${(importanceData.slice(0,3).reduce((a,b)=>a+b.v,0)*100).toFixed(0)}% de la importancia. <strong>Candidatas a eliminar:</strong> ${low3} con menos del ${(importanceData[7].v*100).toFixed(1)}% cada una.`;
+  }
+}
+
+// ==============================
+// SCALER DEMO
+// ==============================
+let scalerView='none';
+function setScalerView(v,btn){
+  scalerView=v;
+  document.querySelectorAll('#sc-t2 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawScalerDemo();
+}
+
+function drawScalerDemo(){
+  const d=clearCanvas('scaler-canvas'); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const r=rng(33);
+  const N=120;
+  const raw=[];
+  for(let i=0;i<N;i++){
+    let v=r()*100+20;
+    if(r()>0.9) v+=r()*200;
+    raw.push(v);
+  }
+  const mean=raw.reduce((a,b)=>a+b)/N;
+  const std=Math.sqrt(raw.map(x=>(x-mean)**2).reduce((a,b)=>a+b)/N);
+  const min=Math.min(...raw), max=Math.max(...raw);
+  const q1=raw.slice().sort((a,b)=>a-b)[Math.floor(N*0.25)];
+  const q2=raw.slice().sort((a,b)=>a-b)[Math.floor(N*0.5)];
+  const q3=raw.slice().sort((a,b)=>a-b)[Math.floor(N*0.75)];
+  let data;
+  if(scalerView==='none') data=raw;
+  else if(scalerView==='standard') data=raw.map(v=>(v-mean)/std);
+  else if(scalerView==='minmax') data=raw.map(v=>(v-min)/(max-min));
+  else data=raw.map(v=>(v-q2)/(q3-q1));
+  const bins=30;
+  const dmin=Math.min(...data), dmax=Math.max(...data)*0.99;
+  const binW=(dmax-dmin)/bins;
+  const counts=new Array(bins).fill(0);
+  data.forEach(v=>{if(v<=dmax){const i=Math.min(Math.floor((v-dmin)/binW),bins-1);counts[i]++;}});
+  const maxC=Math.max(...counts);
+  const px=35,py=15,bw=W-px-15,bh=H-py-30;
+  const colors={none:C.g3,standard:C.g1,minmax:C.g5,robust:C.g4};
+  counts.forEach((c,i)=>{
+    const x=px+i*(bw/bins);
+    const bh2=bh*(c/maxC);
+    ctx.fillStyle=colors[scalerView]+'80'; ctx.strokeStyle=colors[scalerView]; ctx.lineWidth=0.5;
+    ctx.fillRect(x,py+bh-bh2,bw/bins-1,bh2);
+  });
+  // outlier mark
+  if(scalerView==='none'){
+    const outX=px+bw*0.9;
+    ctx.strokeStyle=C.danger; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(outX,py); ctx.lineTo(outX,py+bh); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=C.danger; ctx.font=`10px 'IBM Plex Mono'`; ctx.textAlign='center';
+    ctx.fillText('outliers →',outX,py+12);
+  }
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,py+bh);ctx.lineTo(px+bw,py+bh);ctx.stroke();
+  ctx.fillStyle=C.muted; ctx.font=`9px 'IBM Plex Mono'`; ctx.textAlign='center';
+  ctx.fillText(dmin.toFixed(2),px+10,H-10);
+  ctx.fillText(dmax.toFixed(2),px+bw-10,H-10);
+  const insights={
+    none:'Datos sin escalar: rango [20, 320]. Los outliers comprime toda la distribución principal. Un modelo KNN o SVM trataría esta variable como mucho más importante que otras de rango [0,1].',
+    standard:'StandardScaler: media=0, std=1. Los outliers siguen presentes pero en ±3σ. Ideal para regresión, SVM, PCA, KNN. Los gradientes en NN convergen más rápido.',
+    minmax:'MinMaxScaler: rango [0,1]. Los outliers extremos comprimen todos los demás valores en una franja estrecha. Solo usar cuando no hay outliers significativos o para imágenes.',
+    robust:'RobustScaler usa mediana y IQR en vez de media/std. Los outliers NO distorsionan la escala. La mayoría de datos queda en rango [-2, 2]. Ideal cuando hay outliers importantes.'
+  };
+  document.getElementById('scaler-insight').innerHTML=`<strong>${scalerView==='none'?'Sin escalado':scalerView}:</strong> ${insights[scalerView]}`;
+}
+
+// ==============================
+// LEAKAGE DEMO
+// ==============================
+let leakageView='clean';
+function setLeakageView(v,btn){
+  leakageView=v;
+  document.querySelectorAll('#lk-t3 .ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawLeakageDemo();
+}
+
+function drawLeakageDemo(){
+  const d=clearCanvas('leakage-canvas'); if(!d) return;
+  const {ctx,W,H}=d;
+  ctx.fillStyle=C.surface; ctx.fillRect(0,0,W,H);
+  const scenarios={
+    clean:{train:0.82,val:0.79,prod:0.78,label:'Modelo correcto sin leakage'},
+    leaky:{train:0.99,val:0.97,prod:0.61,label:'Modelo con leakage'},
+    production:{train:0.99,val:0.97,prod:0.61,label:'Realidad en producción'},
+  };
+  const s=scenarios[leakageView];
+  const cats=['Train','Validación','Producción'];
+  const vals=[s.train,s.val,s.prod];
+  const colors=[C.g2,C.g1,leakageView==='clean'?C.g1:C.danger];
+  const px=40,py=20,bw=W-px-20,bh=H-py-30;
+  const barW=bw/3-20;
+  // 0.5 line
+  ctx.strokeStyle=C.border; ctx.lineWidth=0.5;
+  [0.6,0.7,0.8,0.9,1.0].forEach(v=>{
+    const y=py+bh*(1-v);
+    ctx.beginPath(); ctx.moveTo(px,y); ctx.lineTo(px+bw,y); ctx.stroke();
+    ctx.fillStyle=C.muted; ctx.font=`9px 'IBM Plex Mono'`; ctx.textAlign='right';
+    ctx.fillText(v.toFixed(1),px-5,y+3);
+  });
+  vals.forEach((v,i)=>{
+    const x=px+10+i*(bw/3);
+    const bh2=bh*v;
+    ctx.fillStyle=colors[i]+(leakageView==='production'&&i===2?'':'99');
+    if(leakageView==='production'&&i===2){
+      ctx.fillStyle=C.danger+'30';
+      ctx.strokeStyle=C.danger; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+    } else {
+      ctx.strokeStyle=colors[i]; ctx.lineWidth=1; ctx.setLineDash([]);
+    }
+    ctx.beginPath(); ctx.roundRect(x,py+bh-bh2,barW,bh2,4); ctx.fill(); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=C.text; ctx.font=`bold 14px 'IBM Plex Mono'`; ctx.textAlign='center';
+    ctx.fillText((v*100).toFixed(0)+'%',x+barW/2,py+bh-bh2-8);
+    ctx.fillStyle=C.muted; ctx.font=`10px 'IBM Plex Mono'`; ctx.textAlign='center';
+    ctx.fillText(cats[i],x+barW/2,H-10);
+  });
+  ctx.strokeStyle=C.border; ctx.lineWidth=1; ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,py+bh);ctx.lineTo(px+bw,py+bh);ctx.stroke();
+  const insights={
+    clean:'Modelo sin leakage: Las métricas de train (82%), validación (79%) y producción (78%) son consistentes. Hay una pequeña caída natural por generalización, pero el modelo es confiable.',
+    leaky:'Modelo con leakage: Train 99%, Validación 97% — ¡métricas casi perfectas! El equipo está emocionado. PERO en producción solo alcanza 61%. ¡6 semanas de trabajo desperdiciadas!',
+    production:'Esta es la realidad al deployar: el modelo que parecía perfecto (97% en val) colapsa a 61% en producción porque la información filtrada ya no existe. El modelo aprendió a "hacer trampa", no a predecir.'
+  };
+  document.getElementById('leakage-insight').innerHTML=`<strong>${leakageView==='production'?'⚠ Alerta':'Escenario'}:</strong> ${insights[leakageView]}`;
+}
+
+// ==============================
+// INIT
+// ==============================
+function initAllCharts(){
+  const visible=document.querySelector('.section.visible')?.id;
+  if(visible==='sec-overview'){
+    drawImpactBars();
+    const m=document.getElementById('mod-why');
+    if(m&&m.classList.contains('open')){drawScatters();}
+    // auto-open first module
+  }
+  if(visible==='sec-numerical'){
+    if(document.getElementById('mod-log')?.classList.contains('open')){
+      if(document.getElementById('log-t2')?.classList.contains('active')) drawDistributions();
+      if(document.getElementById('log-t2') && document.querySelector('#log-t2.active')) drawDistributions();
+    }
+    if(document.getElementById('mod-bin')?.classList.contains('open')){
+      if(document.getElementById('bin-t2')?.classList.contains('active')) drawBinDemo();
+    }
+    if(document.getElementById('mod-poly')?.classList.contains('open')){
+      if(document.getElementById('poly-t2')?.classList.contains('active')) drawPolyDemo();
+    }
+  }
+  if(visible==='sec-categorical'){
+    if(document.getElementById('mod-enc')?.classList.contains('open')){
+      if(document.getElementById('enc-t3')?.classList.contains('active')) drawEncoding();
+    }
+  }
+  if(visible==='sec-temporal'){
+    if(document.getElementById('mod-time')?.classList.contains('open')){
+      if(document.getElementById('time-t2')?.classList.contains('active')) drawCyclic();
+      if(document.getElementById('time-t3')?.classList.contains('active')) drawLagDemo();
+    }
+  }
+  if(visible==='sec-selection'){
+    if(document.getElementById('mod-sel')?.classList.contains('open')){
+      if(document.getElementById('sel-t2')?.classList.contains('active')) drawImportance();
+    }
+  }
+  if(visible==='sec-scaling'){
+    if(document.getElementById('mod-scale')?.classList.contains('open')){
+      if(document.getElementById('sc-t2')?.classList.contains('active')) drawScalerDemo();
+    }
+  }
+  if(visible==='sec-leakage'){
+    if(document.getElementById('mod-leak')?.classList.contains('open')){
+      if(document.getElementById('lk-t3')?.classList.contains('active')) drawLeakageDemo();
+    }
+  }
+}
+
+// Auto-draw on tab/panel switch
+document.addEventListener('click', e=>{
+  if(e.target.classList.contains('mtab')){
+    setTimeout(()=>{
+      const panel=e.target.closest('.module-body')?.querySelector('.mpanel.active');
+      if(!panel) return;
+      const id=panel.id;
+      if(id==='log-t2') drawDistributions();
+      if(id==='bin-t2') drawBinDemo();
+      if(id==='poly-t2') drawPolyDemo();
+      if(id==='enc-t3') drawEncoding();
+      if(id==='time-t2') drawCyclic();
+      if(id==='time-t3') drawLagDemo();
+      if(id==='sel-t2') {if(!importanceData) regenerateImportance(); else drawImportance();}
+      if(id==='sc-t2') drawScalerDemo();
+      if(id==='lk-t3') drawLeakageDemo();
+      if(id==='why-t2') drawScatters();
+    },60);
+  }
+});
+
+// Init on load
+window.addEventListener('load', ()=>{
+  // open first module
+  document.querySelector('#sec-overview .module')?.classList.add('open');
+  setTimeout(()=>{
+    drawImpactBars();
+    drawScatters();
+  },200);
+});
+
+window.addEventListener('resize', ()=>setTimeout(()=>initAllCharts(),100));
+</script>
+</body>
+</html>
